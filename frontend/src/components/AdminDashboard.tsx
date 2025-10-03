@@ -341,6 +341,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         id: p.id.toString(),
         customerName: p.customer ? p.customer.full_name : 'Unknown',
         customerNationalCode: p.customer ? p.customer.national_code : '',
+        policyNumber: p.policy_number,
         type: p.insurance_type,
         vehicle: p.details,
         startDate: p.start_date ? moment(p.start_date).format("jYYYY/jMM/jDD") : '',
@@ -1209,6 +1210,18 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
             </CardContent>
           </Card>
 
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-2">بیمه های نزدیک به انقضا</p>
+                  <p className="text-3xl text-yellow-600">{stats.nearExpiryPoliciesCount}</p>
+                  <p className="text-sm text-yellow-600 mt-1">در ۳۰ روز آینده</p>
+                </div>
+                <Calendar className="h-8 w-8 text-yellow-600" />
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Management Tabs */}
@@ -1967,7 +1980,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                           <TableCell>{policy.vehicle}</TableCell>
                           <TableCell>{policy.type}</TableCell>
                           <TableCell>{policy.customerName}</TableCell>
-                          <TableCell>{policy.id}</TableCell>
+                          <TableCell>{policy.policyNumber}</TableCell>
                         </TableRow>
                       ))
                     ) : (

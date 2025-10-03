@@ -23,7 +23,9 @@ import {
   FileText,
   Phone,
   LogOut,
-  Copy
+  Copy,
+  Heart,
+  ShieldAlert,
 } from "lucide-react";
 
 interface CustomerDashboardProps {
@@ -36,7 +38,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
   const [customer, setCustomer] = useState<any>(null);
   const [stats, setStats] = useState({
     overdueCount: 0,
-    nearExpireCount: 0,
+    nearExpiryPoliciesCount: 0,
   });
   const [, setLoading] = useState(true);
   const [selectedPolicy, setSelectedPolicy] = useState<any>(null);
@@ -81,6 +83,8 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
               case 'بدنه': icon = Shield; color = 'text-green-600'; bgColor = 'bg-green-100'; break;
               case 'آتش‌سوزی': icon = Flame; color = 'text-red-600'; bgColor = 'bg-red-100'; break;
               case 'حوادث': icon = User; color = 'text-yellow-600'; bgColor = 'bg-yellow-100'; break;
+              case 'زندگی': icon = Heart; color = 'text-pink-600'; bgColor = 'bg-pink-100'; break;
+              case 'مسئولیت': icon = ShieldAlert; color = 'text-indigo-600'; bgColor = 'bg-indigo-100'; break;
               default: icon = FileText; color = 'text-gray-600'; bgColor = 'bg-gray-100';
             }
             return {
@@ -97,14 +101,14 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
               payId: p.payment_id,
             };
           });
+          const nearExpiryPoliciesCount = policies.filter(p => p.status === 'نزدیک انقضا').length;
           setInsurancePolicies(policies);
-        }
 
         if (installmentsResponse.ok) {
           const data = await installmentsResponse.json();
           const now = moment();
           let overdueCount = 0;
-          let nearExpireCount = 0;
+
           const processedInstallments = data.map((inst: any) => {
             const momentDueDate = moment(inst.due_date);
             let status = inst.status;
@@ -123,7 +127,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
             };
           });
           setAllInstallments(processedInstallments);
-          setStats({ overdueCount, nearExpireCount });
+          setStats({ overdueCount, nearExpiryPoliciesCount });
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -169,6 +173,17 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
       absoluteUrl = `https://${link}`;
     }
     window.open(absoluteUrl, '_blank');
+  };
+
+  const getScoreDescription = (score: string) => {
+    if (!score) return '';
+    switch (score) {
+      case 'A': return 'عالی';
+      case 'B': return 'خوب';
+      case 'C': return 'متوسط';
+      case 'D': return 'ضعیف';
+      default: return '';
+    }
   };
 
   return (
@@ -234,8 +249,25 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
+                  <p className="text-sm text-gray-600">بیمه های نزدیک به انقضا</p>
+                  <p className="text-2xl text-yellow-600">{stats.nearExpiryPoliciesCount}</p>
+                </div>
+                <Calendar className="h-8 w-8 text-yellow-600" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
                   <p className="text-sm text-gray-600">امتیاز بیمه‌گذار</p>
                   <div className="flex flex-row-reverse justify-center items-center gap-4">
+                    <span className={`text-lg font-bold ${
+                      customer?.score === 'A' ? 'text-green-600' :
+                      customer?.score === 'B' ? 'text-blue-600' :
+                      customer?.score === 'C' ? 'text-orange-600' :
+                      'text-red-600'
+                    }`}>{getScoreDescription(customer?.score)}</span>
                     {['A', 'B', 'C', 'D'].map((score) => (
                       <span
                         key={score}
@@ -368,11 +400,10 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
               <TableHeader>
                 <TableRow>
                   <TableHead className='text-right'>نوع بیمه</TableHead>
-                  <TableHead className='text-right'>شماره قسط</TableHead>
-                  <TableHead className='text-right'>مبلغ</TableHead>
-                  <TableHead className='text-right'>سررسید</TableHead>
                   <TableHead className='text-right'>وضعیت</TableHead>
-                  <TableHead className='text-right'>عملیات</TableHead>
+                  <TableHead className='text-right'>شماره قسط</TableHead>
+                  <TableHead className='text-right'>سررسید</TableHead>
+                  <TableHead className='text-right'>مبلغ</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -384,16 +415,18 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
                     .map(installment => (
                     <TableRow key={installment.id}>
                       <TableCell>{installment.policy?.insurance_type || 'N/A'}</TableCell>
-                      <TableCell>{installment.installment_number}</TableCell>
-                      <TableCell>{parseFloat(installment.amount).toLocaleString('fa-IR')} ریال</TableCell>
-                      <TableCell>{new Date(installment.due_date).toLocaleDateString('fa-IR')}</TableCell>
                       <TableCell>{getPaymentStatusBadge(installment.status)}</TableCell>
+                      <TableCell>{installment.installment_number}</TableCell>
+                      <TableCell>{new Date(installment.due_date).toLocaleDateString('fa-IR')}</TableCell>
                       <TableCell>
-                        {installment.pay_link && installment.status !== 'پرداخت شده' && (
-                          <Button size="sm" onClick={() => handlePayLink(installment.pay_link)}>
-                            پرداخت
-                          </Button>
-                        )}
+                        <div className="flex justify-between items-center">
+                          <span>{parseFloat(installment.amount).toLocaleString('fa-IR')} ریال</span>
+                          {installment.pay_link && installment.status !== 'پرداخت شده' && (
+                            <Button size="sm" onClick={() => handlePayLink(installment.pay_link)}>
+                              پرداخت
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -419,11 +452,11 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className='text-right'>نوع بیمه</TableHead>
                     <TableHead className='text-right'>شماره قسط</TableHead>
                     <TableHead className='text-right'>مبلغ</TableHead>
                     <TableHead className='text-right'>سررسید</TableHead>
                     <TableHead className='text-right'>وضعیت</TableHead>
-                    <TableHead className='text-right'>عملیات</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -433,6 +466,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
                       .sort((a, b) => a.installment_number - b.installment_number)
                       .map((installment) => (
                       <TableRow key={installment.id}>
+                        <TableCell>{installment.policy?.insurance_type || 'N/A'}</TableCell>
                         <TableCell>{installment.installment_number}</TableCell>
                         <TableCell>{parseFloat(installment.amount).toLocaleString('fa-IR')} ریال</TableCell>
                         <TableCell>{new Date(installment.due_date).toLocaleDateString('fa-IR')}</TableCell>

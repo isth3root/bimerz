@@ -112,9 +112,6 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
               if (momentDueDate.isBefore(now, 'day')) {
                 status = 'معوق';
                 overdueCount++;
-              } else if (momentDueDate.isSameOrBefore(moment(now).add(1, 'jMonth'))) {
-                status = 'نزدیک انقضا';
-                nearExpireCount++;
               } else {
                 status = 'آینده';
               }
@@ -237,17 +234,6 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">اقساط نزدیک سررسید</p>
-                  <p className="text-2xl text-yellow-600">{stats.nearExpireCount}</p>
-                </div>
-                <Calendar className="h-8 w-8 text-yellow-600" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
                   <p className="text-sm text-gray-600">امتیاز بیمه‌گذار</p>
                   <div className="flex flex-row-reverse justify-center items-center gap-4">
                     {['A', 'B', 'C', 'D'].map((score) => (
@@ -310,17 +296,17 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-2 text-sm">
-                          <div className="flex justify-between items-center">
-                            <span className="text-gray-600">شناسه پرداخت:</span>
-                            <div className="flex items-center gap-1">
-                              <span>{policy.payId || 'N/A'}</span>
-                              {policy.payId && (
+                          {policy.payId && (
+                            <div className="flex justify-between items-center">
+                              <span className="text-gray-600">شناسه پرداخت:</span>
+                              <div className="flex items-center gap-1">
+                                <span>{policy.payId}</span>
                                 <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => copyToClipboard(policy.payId!)}>
                                   <Copy className="h-3 w-3" />
                                 </Button>
-                              )}
+                              </div>
                             </div>
-                          </div>
+                          )}
                           <div className="flex justify-between">
                             <span className="text-gray-600">شروع:</span>
                             <span>{policy.startDate}</span>

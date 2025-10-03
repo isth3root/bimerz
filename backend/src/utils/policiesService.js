@@ -51,10 +51,10 @@ class PoliciesService {
     if (policy.payment_type === 'اقساطی' && policy.installment_count && policy.installment_count > 0 && policyWithRelations.premium) {
       const installmentAmount = policyWithRelations.premium / policy.installment_count;
       const startDate = policyWithRelations.start_date ? new Date(policyWithRelations.start_date) : new Date();
+      const startDay = startDate.getDate();
 
       for (let i = 1; i <= policy.installment_count; i++) {
-        const dueDate = new Date(startDate);
-        dueDate.setMonth(startDate.getMonth() + i - 1);
+        const dueDate = new Date(startDate.getFullYear(), startDate.getMonth() + i, startDay);
 
         await installmentsService.create({
           customer_id: policyWithRelations.customer.id,

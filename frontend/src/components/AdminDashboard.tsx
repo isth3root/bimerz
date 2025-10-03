@@ -451,6 +451,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
             if (status !== 'پرداخت شده') {
               if (dueDateMoment.isBefore(now)) {
                 status = "معوق";
+              } else if (dueDateMoment.diff(now, 'days') <= 30) {
+                status = "نزدیک انقضا";
               } else {
                 status = "آینده";
               }
@@ -481,16 +483,6 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
       fetchInstallments();
     }
   }, [token, customers, policies]);
-
-  useEffect(() => {
-    if (formDataPolicy.startDate) {
-      const startDate = moment(formDataPolicy.startDate, "jYYYY/jMM/jDD");
-      if (startDate.isValid()) {
-        const endDate = startDate.add(1, "year").format("jYYYY/jMM/jDD");
-        setFormDataPolicy((prev) => ({ ...prev, endDate }));
-      }
-    }
-  }, [formDataPolicy.startDate]);
 
 
 
@@ -689,7 +681,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   };
 
   const handleAddPolicy = async () => {
-    if (!formDataPolicy.customerName.trim() || !formDataPolicy.customerNationalCode.trim() || !formDataPolicy.type.trim() || !formDataPolicy.vehicle.trim() || !formDataPolicy.startDate.trim() || !formDataPolicy.endDate.trim() || !formDataPolicy.premium.trim()) {
+    if (!formDataPolicy.customerName.trim() || !formDataPolicy.customerNationalCode.trim() || !formDataPolicy.type.trim() || !formDataPolicy.vehicle.trim() || !formDataPolicy.startDate.trim() || !formDataPolicy.endDate.trim() || !formDataPolicy.premium.trim() || !formDataPolicy.payId.trim()) {
       toast.error("لطفا تمام فیلدهای مورد نیاز را پر کنید.");
       return;
     }
@@ -716,6 +708,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
       formData.append('payment_type', formDataPolicy.paymentType);
       formData.append('installment_count', formDataPolicy.installmentsCount.toString());
       formData.append('payment_id', formDataPolicy.payId);
+      formData.append('policy_number', formDataPolicy.policyNumber);
       formData.append('payment_link', formDataPolicy.paymentLink);
       if (formDataPolicy.pdfFile) {
         formData.append('pdf', formDataPolicy.pdfFile);
@@ -791,6 +784,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
           payment_type: formDataPolicy.paymentType,
           installment_count: formDataPolicy.installmentsCount,
           payment_id: formDataPolicy.payId,
+          policy_number: formDataPolicy.policyNumber,
           payment_link: formDataPolicy.paymentLink,
         }),
       });
@@ -1214,8 +1208,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 mb-2">بیمه های نزدیک به انقضا</p>
-                  <p className="text-3xl text-yellow-600">{stats.nearExpiryPoliciesCount}</p>
+                  <p className="text-sm text-gray-600 mb-2">اقساط نزدیک سررسید</p>
+                  <p className="text-3xl text-yellow-600">{stats.nearExpiryInstallmentsCount}</p>
                   <p className="text-sm text-yellow-600 mt-1">در ۳۰ روز آینده</p>
                 </div>
                 <Calendar className="h-8 w-8 text-yellow-600" />
@@ -1695,9 +1689,11 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                             id="policy-startDate"
                             value={formDataPolicy.startDate}
                             onChange={(date: string) => {
+                              const endDate = moment(date, "jYYYY/jMM/jDD").add(1, 'year').format("jYYYY/jMM/jDD");
                               setFormDataPolicy({
                                 ...formDataPolicy,
                                 startDate: date,
+                                endDate: endDate,
                               });
                             }}
                             placeholder="انتخاب تاریخ شروع"

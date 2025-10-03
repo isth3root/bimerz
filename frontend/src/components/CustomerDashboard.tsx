@@ -23,9 +23,7 @@ import {
   FileText,
   Phone,
   LogOut,
-  Copy,
-  Heart,
-  ShieldAlert,
+  Copy
 } from "lucide-react";
 
 interface CustomerDashboardProps {
@@ -38,7 +36,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
   const [customer, setCustomer] = useState<any>(null);
   const [stats, setStats] = useState({
     overdueCount: 0,
-    nearExpiryPoliciesCount: 0,
+    nearExpireCount: 0,
   });
   const [, setLoading] = useState(true);
   const [selectedPolicy, setSelectedPolicy] = useState<any>(null);
@@ -83,8 +81,6 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
               case 'بدنه': icon = Shield; color = 'text-green-600'; bgColor = 'bg-green-100'; break;
               case 'آتش‌سوزی': icon = Flame; color = 'text-red-600'; bgColor = 'bg-red-100'; break;
               case 'حوادث': icon = User; color = 'text-yellow-600'; bgColor = 'bg-yellow-100'; break;
-              case 'زندگی': icon = Heart; color = 'text-pink-600'; bgColor = 'bg-pink-100'; break;
-              case 'مسئولیت': icon = ShieldAlert; color = 'text-indigo-600'; bgColor = 'bg-indigo-100'; break;
               default: icon = FileText; color = 'text-gray-600'; bgColor = 'bg-gray-100';
             }
             return {
@@ -99,16 +95,17 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
               bgColor,
               isInstallment: p.payment_type === 'اقساطی',
               payId: p.payment_id,
+              paymentLink: p.payment_link,
             };
           });
-          const nearExpiryPoliciesCount = policies.filter(p => p.status === 'نزدیک انقضا').length;
           setInsurancePolicies(policies);
+        }
 
         if (installmentsResponse.ok) {
           const data = await installmentsResponse.json();
           const now = moment();
           let overdueCount = 0;
-
+          let nearExpireCount = 0;
           const processedInstallments = data.map((inst: any) => {
             const momentDueDate = moment(inst.due_date);
             let status = inst.status;
@@ -116,6 +113,9 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
               if (momentDueDate.isBefore(now, 'day')) {
                 status = 'معوق';
                 overdueCount++;
+              } else if (momentDueDate.isSameOrBefore(moment(now).add(1, 'jMonth'))) {
+                status = 'نزدیک انقضا';
+                nearExpireCount++;
               } else {
                 status = 'آینده';
               }
@@ -127,7 +127,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
             };
           });
           setAllInstallments(processedInstallments);
-          setStats({ overdueCount, nearExpiryPoliciesCount });
+          setStats({ overdueCount, nearExpireCount });
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -173,17 +173,6 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
       absoluteUrl = `https://${link}`;
     }
     window.open(absoluteUrl, '_blank');
-  };
-
-  const getScoreDescription = (score: string) => {
-    if (!score) return '';
-    switch (score) {
-      case 'A': return 'عالی';
-      case 'B': return 'خوب';
-      case 'C': return 'متوسط';
-      case 'D': return 'ضعیف';
-      default: return '';
-    }
   };
 
   return (
@@ -249,8 +238,8 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">بیمه های نزدیک به انقضا</p>
-                  <p className="text-2xl text-yellow-600">{stats.nearExpiryPoliciesCount}</p>
+                  <p className="text-sm text-gray-600">اقساط نزدیک سررسید</p>
+                  <p className="text-2xl text-yellow-600">{stats.nearExpireCount}</p>
                 </div>
                 <Calendar className="h-8 w-8 text-yellow-600" />
               </div>
@@ -262,12 +251,6 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
                 <div>
                   <p className="text-sm text-gray-600">امتیاز بیمه‌گذار</p>
                   <div className="flex flex-row-reverse justify-center items-center gap-4">
-                    <span className={`text-lg font-bold ${
-                      customer?.score === 'A' ? 'text-green-600' :
-                      customer?.score === 'B' ? 'text-blue-600' :
-                      customer?.score === 'C' ? 'text-orange-600' :
-                      'text-red-600'
-                    }`}>{getScoreDescription(customer?.score)}</span>
                     {['A', 'B', 'C', 'D'].map((score) => (
                       <span
                         key={score}
@@ -328,17 +311,17 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-2 text-sm">
-                          {policy.payId && (
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-600">شناسه پرداخت:</span>
-                              <div className="flex items-center gap-1">
-                                <span>{policy.payId}</span>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600">شناسه پرداخت:</span>
+                            <div className="flex items-center gap-1">
+                              <span>{policy.payId || 'N/A'}</span>
+                              {policy.payId && (
                                 <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => copyToClipboard(policy.payId!)}>
                                   <Copy className="h-3 w-3" />
                                 </Button>
-                              </div>
+                              )}
                             </div>
-                          )}
+                          </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">شروع:</span>
                             <span>{policy.startDate}</span>
@@ -380,6 +363,11 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
                               اقساط
                             </Button>
                           )}
+                          {policy.paymentLink && (
+                            <Button size="sm" className="flex-1" onClick={() => handlePayLink(policy.paymentLink)}>
+                              پرداخت
+                            </Button>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -400,10 +388,10 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
               <TableHeader>
                 <TableRow>
                   <TableHead className='text-right'>نوع بیمه</TableHead>
-                  <TableHead className='text-right'>وضعیت</TableHead>
                   <TableHead className='text-right'>شماره قسط</TableHead>
-                  <TableHead className='text-right'>سررسید</TableHead>
                   <TableHead className='text-right'>مبلغ</TableHead>
+                  <TableHead className='text-right'>سررسید</TableHead>
+                  <TableHead className='text-right'>وضعیت</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -415,19 +403,10 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
                     .map(installment => (
                     <TableRow key={installment.id}>
                       <TableCell>{installment.policy?.insurance_type || 'N/A'}</TableCell>
-                      <TableCell>{getPaymentStatusBadge(installment.status)}</TableCell>
                       <TableCell>{installment.installment_number}</TableCell>
+                      <TableCell>{parseFloat(installment.amount).toLocaleString('fa-IR')} ریال</TableCell>
                       <TableCell>{new Date(installment.due_date).toLocaleDateString('fa-IR')}</TableCell>
-                      <TableCell>
-                        <div className="flex justify-between items-center">
-                          <span>{parseFloat(installment.amount).toLocaleString('fa-IR')} ریال</span>
-                          {installment.pay_link && installment.status !== 'پرداخت شده' && (
-                            <Button size="sm" onClick={() => handlePayLink(installment.pay_link)}>
-                              پرداخت
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
+                      <TableCell>{getPaymentStatusBadge(installment.status)}</TableCell>
                     </TableRow>
                   ))
                 ) : (
@@ -452,7 +431,6 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className='text-right'>نوع بیمه</TableHead>
                     <TableHead className='text-right'>شماره قسط</TableHead>
                     <TableHead className='text-right'>مبلغ</TableHead>
                     <TableHead className='text-right'>سررسید</TableHead>
@@ -466,18 +444,10 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
                       .sort((a, b) => a.installment_number - b.installment_number)
                       .map((installment) => (
                       <TableRow key={installment.id}>
-                        <TableCell>{installment.policy?.insurance_type || 'N/A'}</TableCell>
                         <TableCell>{installment.installment_number}</TableCell>
                         <TableCell>{parseFloat(installment.amount).toLocaleString('fa-IR')} ریال</TableCell>
                         <TableCell>{new Date(installment.due_date).toLocaleDateString('fa-IR')}</TableCell>
                         <TableCell>{getPaymentStatusBadge(installment.status)}</TableCell>
-                        <TableCell>
-                          {installment.pay_link && installment.status !== 'پرداخت شده' && (
-                            <Button size="sm" onClick={() => handlePayLink(installment.pay_link)}>
-                              پرداخت
-                            </Button>
-                          )}
-                        </TableCell>
                       </TableRow>
                     ))
                   ) : (

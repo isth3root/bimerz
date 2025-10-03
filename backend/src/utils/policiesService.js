@@ -6,23 +6,7 @@ import installmentsService from './installmentsService.js';
 class PoliciesService {
   async findAll() {
     const policyRepository = dataSource.getRepository(Policy);
-    const policies = await policyRepository.find({ relations: ['customer'] });
-    const now = new Date();
-    const oneMonthFromNow = new Date();
-    oneMonthFromNow.setMonth(now.getMonth() + 1);
-
-    return policies.map(policy => {
-      let status = policy.status;
-      if (policy.end_date) {
-        const endDate = new Date(policy.end_date);
-        if (endDate < now) {
-          status = 'منقضی';
-        } else if (endDate <= oneMonthFromNow) {
-          status = 'نزدیک انقضا';
-        }
-      }
-      return { ...policy, status };
-    });
+    return policyRepository.find({ relations: ['customer'] });
   }
 
   async findOne(id) {
@@ -54,7 +38,6 @@ class PoliciesService {
       premium: +(policy.premium || 0),
       installment_count: +(policy.installment_count || 0),
       status,
-      payment_id: policy.payment_id || null,
     });
     const savedPolicy = await policyRepository.save(newPolicy);
 
@@ -68,12 +51,10 @@ class PoliciesService {
     if (policy.payment_type === 'اقساطی' && policy.installment_count && policy.installment_count > 0 && policyWithRelations.premium) {
       const installmentAmount = policyWithRelations.premium / policy.installment_count;
       const startDate = policyWithRelations.start_date ? new Date(policyWithRelations.start_date) : new Date();
-      const startDay = startDate.getDate();
 
       for (let i = 1; i <= policy.installment_count; i++) {
-        const dueDate = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
-        const lastDayOfMonth = new Date(dueDate.getFullYear(), dueDate.getMonth() + 1, 0).getDate();
-        dueDate.setDate(Math.min(startDay, lastDayOfMonth));
+        const dueDate = new Date(startDate);
+        dueDate.setMonth(startDate.getMonth() + i - 1);
 
         await installmentsService.create({
           customer_id: policyWithRelations.customer.id,

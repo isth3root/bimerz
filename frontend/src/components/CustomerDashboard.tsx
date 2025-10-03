@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "./ui/dialog";
 import { toast } from "sonner";
+import api from '../utils/api';
 import {
   Car,
   Shield,
@@ -52,83 +53,74 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
       if (!token || !userId) return;
       try {
         setLoading(true);
+        let nearExpiryPoliciesCount = 0;
+        let overdueCount = 0;
         const [
-          customerResponse,
-          policiesResponse,
-          installmentsResponse,
+          customerData,
+          policiesData,
+          installmentsData,
         ] = await Promise.all([
-          fetch(`http://localhost:3000/admin/customers/by-national/${userId}`, {
+          api.get(`/admin/customers/by-national/${userId}`, {
             headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch(`http://localhost:3000/customer/policies`, {
+          }).then(res => res.data),
+          api.get('/customer/policies', {
             headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch(`http://localhost:3000/installments/customer`, {
+          }).then(res => res.data),
+          api.get('/installments/customer', {
             headers: { Authorization: `Bearer ${token}` },
-          }),
+          }).then(res => res.data),
         ]);
 
-        if (customerResponse.ok) {
-          const customerData = await customerResponse.json();
-          setCustomer(customerData);
-        }
+        setCustomer(customerData);
 
-        if (policiesResponse.ok) {
-          const data = await policiesResponse.json();
-          // const now = new Date();
-          const policies = data.map((p: any) => {
-            let icon, color, bgColor;
-            switch (p.insurance_type) {
-              case 'ثالث': icon = Car; color = 'text-blue-600'; bgColor = 'bg-blue-100'; break;
-              case 'بدنه': icon = Shield; color = 'text-green-600'; bgColor = 'bg-green-100'; break;
-              case 'آتش‌سوزی': icon = Flame; color = 'text-red-600'; bgColor = 'bg-red-100'; break;
-              case 'حوادث': icon = User; color = 'text-yellow-600'; bgColor = 'bg-yellow-100'; break;
-              case 'زندگی': icon = Heart; color = 'text-pink-600'; bgColor = 'bg-pink-100'; break;
-              case 'مسئولیت': icon = ShieldAlert; color = 'text-indigo-600'; bgColor = 'bg-indigo-100'; break;
-              default: icon = FileText; color = 'text-gray-600'; bgColor = 'bg-gray-100';
+        const policies = policiesData.map((p: any) => {
+          let icon, color, bgColor;
+          switch (p.insurance_type) {
+            case 'ثالث': icon = Car; color = 'text-blue-600'; bgColor = 'bg-blue-100'; break;
+            case 'بدنه': icon = Shield; color = 'text-green-600'; bgColor = 'bg-green-100'; break;
+            case 'آتش‌سوزی': icon = Flame; color = 'text-red-600'; bgColor = 'bg-red-100'; break;
+            case 'حوادث': icon = User; color = 'text-yellow-600'; bgColor = 'bg-yellow-100'; break;
+            case 'زندگی': icon = Heart; color = 'text-pink-600'; bgColor = 'bg-pink-100'; break;
+            case 'مسئولیت': icon = ShieldAlert; color = 'text-indigo-600'; bgColor = 'bg-indigo-100'; break;
+            default: icon = FileText; color = 'text-gray-600'; bgColor = 'bg-gray-100';
+          }
+          return {
+            id: p.id,
+            type: p.insurance_type,
+            vehicle: p.details,
+            startDate: p.start_date ? new Date(p.start_date).toLocaleDateString('fa-IR') : '',
+            endDate: p.end_date ? new Date(p.end_date).toLocaleDateString('fa-IR') : '',
+            status: p.status,
+            icon,
+            color,
+            bgColor,
+            isInstallment: p.payment_type === 'اقساطی',
+            payId: p.payment_id,
+            payLink: p.payment_link,
+          };
+        });
+        nearExpiryPoliciesCount = policies.filter(p => p.status === 'نزدیک انقضا').length;
+        setInsurancePolicies(policies);
+
+        const processedInstallments = installmentsData.map((inst: any) => {
+          const momentDueDate = moment(inst.due_date);
+          let status = inst.status;
+          if (status !== 'پرداخت شده') {
+            if (momentDueDate.isBefore(moment(), 'day')) {
+              status = 'معوق';
+              overdueCount++;
+            } else {
+              status = 'آینده';
             }
-            return {
-              id: p.id,
-              type: p.insurance_type,
-              vehicle: p.details,
-              startDate: p.start_date ? new Date(p.start_date).toLocaleDateString('fa-IR') : '',
-              endDate: p.end_date ? new Date(p.end_date).toLocaleDateString('fa-IR') : '',
-              status: p.status,
-              icon,
-              color,
-              bgColor,
-              isInstallment: p.payment_type === 'اقساطی',
-              payId: p.payment_id,
-            };
-          });
-          const nearExpiryPoliciesCount = policies.filter(p => p.status === 'نزدیک انقضا').length;
-          setInsurancePolicies(policies);
-
-        if (installmentsResponse.ok) {
-          const data = await installmentsResponse.json();
-          const now = moment();
-          let overdueCount = 0;
-
-          const processedInstallments = data.map((inst: any) => {
-            const momentDueDate = moment(inst.due_date);
-            let status = inst.status;
-            if (status !== 'پرداخت شده') {
-              if (momentDueDate.isBefore(now, 'day')) {
-                status = 'معوق';
-                overdueCount++;
-              } else {
-                status = 'آینده';
-              }
-            }
-            return {
-              ...inst,
-              status,
-              pay_link: inst.pay_link,
-            };
-          });
-          setAllInstallments(processedInstallments);
-          setStats({ overdueCount, nearExpiryPoliciesCount });
-        }
+          }
+          return {
+            ...inst,
+            status,
+            pay_link: inst.pay_link,
+          };
+        });
+        setAllInstallments(processedInstallments);
+        setStats({ overdueCount, nearExpiryPoliciesCount });
       } catch (error) {
         console.error('Error fetching data:', error);
         toast.error("خطا در بارگیری اطلاعات پنل");
@@ -351,34 +343,37 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
                         <div className="mt-4 flex gap-2">
                           <Button size="sm" variant="outline" className={policy.isInstallment ? "flex-1" : "w-full"} onClick={async () => {
                             try {
-                              const response = await fetch(`http://localhost:3000/customer/policies/${policy.id}/download`, {
+                              const response = await api.get(`/customer/policies/${policy.id}/download`, {
                                 headers: { Authorization: `Bearer ${token}` },
+                                responseType: 'blob',
                               });
-                              if (response.ok) {
-                                const blob = await response.blob();
-                                const url = window.URL.createObjectURL(blob);
-                                const a = document.createElement('a');
-                                a.href = url;
-                                a.download = `policy-${policy.id}.pdf`;
-                                a.click();
-                                window.URL.revokeObjectURL(url);
-                              } else {
-                                toast.error('خطا در دانلود فایل');
-                              }
+                              const blob = response.data;
+                              const url = window.URL.createObjectURL(blob);
+                              const a = document.createElement('a');
+                              a.href = url;
+                              a.download = `policy-${policy.id}.pdf`;
+                              a.click();
+                              window.URL.revokeObjectURL(url);
                             } catch (error) {
                               toast.error('خطا در دانلود فایل');
                             }
                           }}>
-                            <Download className="h-4 w-4 ml-2" />
+                            {/* <Download className="h-4 w-4" /> */}
                             دانلود بیمه نامه
                           </Button>
                           {policy.isInstallment && (
-                            <Button size="sm" variant="outline" className="flex-1" onClick={() => {
-                              setSelectedPolicy(policy);
-                              setShowInstallmentsDialog(true);
-                            }}>
-                              اقساط
-                            </Button>
+                            <>
+                              <Button size="sm" variant="outline" className="flex-1" onClick={() => {
+                                setSelectedPolicy(policy);
+                                setShowInstallmentsDialog(true);
+                              }}>
+                                اقساط
+                              </Button>
+                              <Button size="sm" className="flex-1" onClick={() => handlePayLink(policy.payLink)}>
+                                {/* <CreditCard className="h-4 w-4 ml-2" /> */}
+                                پرداخت
+                              </Button>
+                            </>
                           )}
                         </div>
                       </CardContent>
@@ -401,7 +396,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
                 <TableRow>
                   <TableHead className='text-right'>نوع بیمه</TableHead>
                   <TableHead className='text-right'>وضعیت</TableHead>
-                  <TableHead className='text-right'>شماره قسط</TableHead>
+                  <TableHead className='text-right'>شماره</TableHead>
                   <TableHead className='text-right'>سررسید</TableHead>
                   <TableHead className='text-right'>مبلغ</TableHead>
                 </TableRow>
@@ -419,14 +414,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
                       <TableCell>{installment.installment_number}</TableCell>
                       <TableCell>{new Date(installment.due_date).toLocaleDateString('fa-IR')}</TableCell>
                       <TableCell>
-                        <div className="flex justify-between items-center">
-                          <span>{parseFloat(installment.amount).toLocaleString('fa-IR')} ریال</span>
-                          {installment.pay_link && installment.status !== 'پرداخت شده' && (
-                            <Button size="sm" onClick={() => handlePayLink(installment.pay_link)}>
-                              پرداخت
-                            </Button>
-                          )}
-                        </div>
+                        {parseFloat(installment.amount).toLocaleString('fa-IR')} ریال
                       </TableCell>
                     </TableRow>
                   ))
@@ -453,7 +441,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
                 <TableHeader>
                   <TableRow>
                     <TableHead className='text-right'>نوع بیمه</TableHead>
-                    <TableHead className='text-right'>شماره قسط</TableHead>
+                    <TableHead className='text-right'>شماره</TableHead>
                     <TableHead className='text-right'>مبلغ</TableHead>
                     <TableHead className='text-right'>سررسید</TableHead>
                     <TableHead className='text-right'>وضعیت</TableHead>
@@ -471,13 +459,6 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
                         <TableCell>{parseFloat(installment.amount).toLocaleString('fa-IR')} ریال</TableCell>
                         <TableCell>{new Date(installment.due_date).toLocaleDateString('fa-IR')}</TableCell>
                         <TableCell>{getPaymentStatusBadge(installment.status)}</TableCell>
-                        <TableCell>
-                          {installment.pay_link && installment.status !== 'پرداخت شده' && (
-                            <Button size="sm" onClick={() => handlePayLink(installment.pay_link)}>
-                              پرداخت
-                            </Button>
-                          )}
-                        </TableCell>
                       </TableRow>
                     ))
                   ) : (

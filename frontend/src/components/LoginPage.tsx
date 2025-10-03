@@ -6,6 +6,8 @@ import { Label } from "./ui/label";
 import { ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
+import api from '../utils/api';
+
 interface LoginPageProps {
   onLogin: (userType: 'customer' | 'admin') => void;
   onNavigate: (page: string) => void;
@@ -21,30 +23,19 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3000/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: nationalCode,
-          password: insuranceCode,
-        }),
+      const response = await api.post('/auth/login', {
+        username: nationalCode,
+        password: insuranceCode,
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('token', data.access_token);
-        localStorage.setItem('userId', data.username);
-        localStorage.setItem('role', data.role);
-        toast.success('ورود موفق');
-        onLogin(data.role);
-      } else {
-        toast.error('اطلاعات ورود نامعتبر است');
-      }
+      const data = response.data;
+      localStorage.setItem('token', data.access_token);
+      localStorage.setItem('userId', data.username);
+      localStorage.setItem('role', data.role);
+      toast.success('ورود موفق');
+      onLogin(data.role);
     } catch (error) {
       console.error('Login error:', error);
-      toast.error('ورود ناموفق');
+      toast.error('اطلاعات ورود نامعتبر است');
     } finally {
       setIsLoading(false);
     }

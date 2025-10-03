@@ -49,6 +49,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { toast } from "sonner";
+import api from '../utils/api';
 import { DatePicker } from "zaman";
 import moment from "moment-jalaali";
 
@@ -267,24 +268,13 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   const fetchCustomers = async () => {
     try {
-      const response = await fetch('http://localhost:3000/admin/customers', {
+      const response = await api.get('/admin/customers', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      
-      if (response.status === 401) {
-        console.error('Authentication failed - token may be invalid');
-        localStorage.removeItem('token');
-        onLogout();
-        return;
-      }
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
+
+      const data = response.data;
       if (!Array.isArray(data)) {
         console.error('Expected array for customers data');
         return;
@@ -315,24 +305,13 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
     const fetchPolicies = async () => {
     try {
-      const response = await fetch('http://localhost:3000/admin/policies', {
+      const response = await api.get('/admin/policies', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      
-      if (response.status === 401) {
-        console.error('Authentication failed - token may be invalid');
-        localStorage.removeItem('token');
-        onLogout();
-        return;
-      }
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
+
+      const data = response.data;
       if (!Array.isArray(data)) {
         console.error('Expected array for policies data');
         return;
@@ -365,44 +344,24 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
 
         // Fetch stats
-      const customersCountResponse = await fetch('http://localhost:3000/admin/customers/count', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const customersCountData = customersCountResponse.ok ? await customersCountResponse.json() : 0;
+      const [
+        customersCountData,
+        policiesCountData,
+        overdueData,
+        nearExpiryData,
+        nearExpiryInstallmentsData,
+      ] = await Promise.all([
+        api.get('/admin/customers/count', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data).catch(() => 0),
+        api.get('/count', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data).catch(() => 0),
+        api.get('/installments/overdue/count', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data).catch(() => 0),
+        api.get('/admin/policies/near-expiry/count', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data).catch(() => 0),
+        api.get('/installments/near-expiry/count', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data).catch(() => 0),
+      ]);
+
       const customersCount = typeof customersCountData === 'object' && customersCountData.count !== undefined ? customersCountData.count : customersCountData;
-
-      const policiesCountResponse = await fetch('http://localhost:3000/count', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const policiesCountData = policiesCountResponse.ok ? await policiesCountResponse.json() : 0;
       const policiesCount = typeof policiesCountData === 'object' && policiesCountData.count !== undefined ? policiesCountData.count : policiesCountData;
-
-      const overdueResponse = await fetch('http://localhost:3000/installments/overdue/count', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const overdueData = overdueResponse.ok ? await overdueResponse.json() : 0;
       const overdueInstallmentsCount = typeof overdueData === 'object' && overdueData.count !== undefined ? overdueData.count : overdueData;
-
-      const nearExpiryResponse = await fetch('http://localhost:3000/admin/policies/near-expiry/count', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const nearExpiryData = nearExpiryResponse.ok ? await nearExpiryResponse.json() : 0;
       const nearExpiryPoliciesCount = typeof nearExpiryData === 'object' && nearExpiryData.count !== undefined ? nearExpiryData.count : nearExpiryData;
-
-      const nearExpiryInstallmentsResponse = await fetch('http://localhost:3000/installments/near-expiry/count', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const nearExpiryInstallmentsData = nearExpiryInstallmentsResponse.ok ? await nearExpiryInstallmentsResponse.json() : 0;
       const nearExpiryInstallmentsCount = typeof nearExpiryInstallmentsData === 'object' && nearExpiryInstallmentsData.count !== undefined ? nearExpiryInstallmentsData.count : nearExpiryInstallmentsData;
 
       setStats({
@@ -430,17 +389,16 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   useEffect(() => {
     const fetchInstallments = async () => {
       try {
-        const response = await fetch('http://localhost:3000/installments/admin', {
+        const response = await api.get('/installments/admin', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-        if (response.ok) {
-          const data = await response.json();
-          if (!Array.isArray(data)) {
-            console.error('Expected array for installments data');
-            return;
-          }
+        const data = response.data;
+        if (!Array.isArray(data)) {
+          console.error('Expected array for installments data');
+          return;
+        }
           const now = moment();
           const processedInstallments = data.map((i: any) => {
             const dueDate = new Date(i.due_date);
@@ -469,9 +427,6 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
             };
           });
           setInstallments(processedInstallments);
-        } else {
-          console.error('Failed to fetch installments:', response.status, response.statusText);
-        }
       } catch (error) {
         console.error('Error fetching installments:', error);
       }
@@ -523,50 +478,43 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
       return;
     }
     try {
-      const response = await fetch('http://localhost:3000/admin/customers', {
-        method: 'POST',
+      const response = await api.post('/admin/customers', {
+        full_name: formData.name,
+        national_code: formData.nationalCode,
+        insurance_code: formData.insuranceCode || formData.phone,
+        phone: formData.phone,
+        birth_date: formData.birthDate,
+        score: formData.score,
+        role: editingCustomer?.role || 'customer',
+      }, {
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          full_name: formData.name,
-          national_code: formData.nationalCode,
-          insurance_code: formData.insuranceCode || formData.phone,
-          phone: formData.phone,
-          birth_date: formData.birthDate,
-          score: formData.score,
-          role: editingCustomer?.role || 'customer',
-        }),
       });
-      if (response.ok) {
-        const newCustomer = await response.json();
-        setCustomers([...customers, {
-          id: newCustomer.id.toString(),
-          name: newCustomer.full_name,
-          nationalCode: newCustomer.national_code,
-          phone: newCustomer.phone,
-          email: '',
-          birthDate: formData.birthDate,
-          joinDate: new Date().toLocaleDateString("fa-IR"),
-          activePolicies: 0,
-          status: "فعال",
-          score: newCustomer.score,
-          password: newCustomer.insurance_code,
-        }]);
-        setFormData({
-          name: "",
-          nationalCode: "",
-          insuranceCode: "",
-          phone: "",
-          email: "",
-          birthDate: "",
-          score: "A",
-        });
-        setShowCustomerForm(false);
-      } else {
-        toast.error('خطا در افزودن مشتری');
-      }
+      const newCustomer = response.data;
+      setCustomers([...customers, {
+        id: newCustomer.id.toString(),
+        name: newCustomer.full_name,
+        nationalCode: newCustomer.national_code,
+        phone: newCustomer.phone,
+        email: '',
+        birthDate: formData.birthDate,
+        joinDate: new Date().toLocaleDateString("fa-IR"),
+        activePolicies: 0,
+        status: "فعال",
+        score: newCustomer.score,
+        password: newCustomer.insurance_code,
+      }]);
+      setFormData({
+        name: "",
+        nationalCode: "",
+        insuranceCode: "",
+        phone: "",
+        email: "",
+        birthDate: "",
+        score: "A",
+      });
+      setShowCustomerForm(false);
     } catch (error) {
       console.error('Error:', error);
       toast.error('خطا در افزودن مشتری');
@@ -576,53 +524,46 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const handleEditCustomer = async () => {
     if (!editingCustomer) return;
     try {
-      const response = await fetch(`http://localhost:3000/admin/customers/${editingCustomer.id}`, {
-        method: 'PUT',
+      const response = await api.put(`/admin/customers/${editingCustomer.id}`, {
+        full_name: formData.name,
+        national_code: formData.nationalCode,
+        insurance_code: formData.insuranceCode || formData.phone,
+        phone: formData.phone,
+        birth_date: formData.birthDate,
+        score: formData.score,
+        role: 'customer',
+      }, {
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          full_name: formData.name,
-          national_code: formData.nationalCode,
-          insurance_code: formData.insuranceCode || formData.phone,
-          phone: formData.phone,
-          birth_date: formData.birthDate,
-          score: formData.score,
-          role: 'customer',
-        }),
       });
-      if (response.ok) {
-        const updatedCustomer = await response.json();
-        setCustomers(
-          customers.map((c) =>
-            c.id === editingCustomer.id
-              ? {
-                  ...c,
-                  name: updatedCustomer.full_name,
-                  nationalCode: updatedCustomer.national_code,
-                  phone: updatedCustomer.phone,
-                  birthDate: formData.birthDate,
-                  score: updatedCustomer.score,
-                  password: updatedCustomer.insurance_code,
-                }
-              : c
-          )
-        );
-        setFormData({
-          name: "",
-          nationalCode: "",
-          insuranceCode: "",
-          phone: "",
-          email: "",
-          birthDate: "",
-          score: "A",
-        });
-        setShowCustomerForm(false);
-        setEditingCustomer(null);
-      } else {
-        toast.error('خطا در بروزرسانی مشتری');
-      }
+      const updatedCustomer = response.data;
+      setCustomers(
+        customers.map((c) =>
+          c.id === editingCustomer.id
+            ? {
+                ...c,
+                name: updatedCustomer.full_name,
+                nationalCode: updatedCustomer.national_code,
+                phone: updatedCustomer.phone,
+                birthDate: formData.birthDate,
+                score: updatedCustomer.score,
+                password: updatedCustomer.insurance_code,
+              }
+            : c
+        )
+      );
+      setFormData({
+        name: "",
+        nationalCode: "",
+        insuranceCode: "",
+        phone: "",
+        email: "",
+        birthDate: "",
+        score: "A",
+      });
+      setShowCustomerForm(false);
+      setEditingCustomer(null);
     } catch (error) {
       console.error('Error:', error);
       toast.error('خطا در بروزرسانی مشتری');
@@ -632,18 +573,13 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const handleDeleteCustomer = async () => {
     if (!deleteCustomer) return;
     try {
-      const response = await fetch(`http://localhost:3000/admin/customers/${deleteCustomer.id}`, {
-        method: 'DELETE',
+      await api.delete(`/admin/customers/${deleteCustomer.id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      if (response.ok) {
-        setCustomers(customers.filter((c) => c.id !== deleteCustomer.id));
-        setDeleteCustomer(null);
-      } else {
-        toast.error('خطا در حذف مشتری');
-      }
+      setCustomers(customers.filter((c) => c.id !== deleteCustomer.id));
+      setDeleteCustomer(null);
     } catch (error) {
       console.error('Error:', error);
       toast.error('خطا در حذف مشتری');
@@ -707,6 +643,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         return;
       }
       formData.append('customer_national_code', formDataPolicy.customerNationalCode);
+      formData.append('policy_number', formDataPolicy.policyNumber);
       formData.append('insurance_type', formDataPolicy.type);
       formData.append('details', formDataPolicy.vehicle);
       formData.append('start_date', moment(formDataPolicy.startDate, "jYYYY/jMM/jDD").format("YYYY-MM-DD"));
@@ -721,50 +658,47 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         formData.append('pdf', formDataPolicy.pdfFile);
       }
 
-      const response = await fetch('http://localhost:3000/admin/policies', {
-        method: 'POST',
+      const response = await api.post('/admin/policies', formData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        body: formData,
       });
-      if (response.ok) {
-        const newPolicy = await response.json();
-        setPolicies([...policies, {
-          id: newPolicy.id.toString(),
-          customerName: formDataPolicy.customerName,
-          type: newPolicy.insurance_type,
-          vehicle: newPolicy.details,
-          startDate: formDataPolicy.startDate,
-          endDate: formDataPolicy.endDate,
-          premium: newPolicy.premium.toString(),
-          status: newPolicy.status,
-          paymentType: newPolicy.payment_type,
-          payId: newPolicy.payment_id,
-          installmentsCount: newPolicy.installment_count,
-          pdfFile: null,
-        }]);
-        toast.success("بیمه‌نامه با موفقیت اضافه شد.");
-        setFormDataPolicy({
-          customerName: "",
-          customerNationalCode: "",
-          policyNumber: "",
-          type: "",
-          vehicle: "",
-          startDate: "",
-          endDate: "",
-          premium: "",
-          status: "فعال",
-          paymentType: "اقساطی",
-          payId: "",
-          paymentLink: "",
-          installmentsCount: 0,
-          pdfFile: null,
-        });
-        setShowAddPolicyForm(false);
-      } else {
-        toast.error('خطا در افزودن بیمه‌نامه');
-      }
+      const newPolicy = response.data;
+      setPolicies([...policies, {
+        id: newPolicy.id.toString(),
+        customerName: formDataPolicy.customerName,
+        customerNationalCode: formDataPolicy.customerNationalCode,
+        policyNumber: newPolicy.policy_number,
+        type: newPolicy.insurance_type,
+        vehicle: newPolicy.details,
+        startDate: formDataPolicy.startDate,
+        endDate: formDataPolicy.endDate,
+        premium: newPolicy.premium.toString(),
+        status: newPolicy.status,
+        paymentType: newPolicy.payment_type,
+        payId: newPolicy.payment_id,
+        paymentLink: newPolicy.payment_link,
+        installmentsCount: newPolicy.installment_count,
+        pdfFile: null,
+      }]);
+      toast.success("بیمه‌نامه با موفقیت اضافه شد.");
+      setFormDataPolicy({
+        customerName: "",
+        customerNationalCode: "",
+        policyNumber: "",
+        type: "",
+        vehicle: "",
+        startDate: "",
+        endDate: "",
+        premium: "",
+        status: "فعال",
+        paymentType: "اقساطی",
+        payId: "",
+        paymentLink: "",
+        installmentsCount: 0,
+        pdfFile: null,
+      });
+      setShowAddPolicyForm(false);
     } catch (error) {
       console.error('Error:', error);
       toast.error('خطا در افزودن بیمه‌نامه');
@@ -774,69 +708,66 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const handleEditPolicy = async () => {
     if (!editingPolicy) return;
     try {
-      const response = await fetch(`http://localhost:3000/admin/policies/${editingPolicy.id}`, {
-        method: 'PUT',
+      const response = await api.put(`/admin/policies/${editingPolicy.id}`, {
+        customer_national_code: formDataPolicy.customerNationalCode,
+        policy_number: formDataPolicy.policyNumber,
+        insurance_type: formDataPolicy.type,
+        details: formDataPolicy.vehicle,
+        start_date: moment(formDataPolicy.startDate, "jYYYY/jMM/jDD").format("YYYY-MM-DD"),
+        end_date: moment(formDataPolicy.endDate, "jYYYY/jMM/jDD").format("YYYY-MM-DD"),
+        premium: formDataPolicy.premium.replace(/,/g, ''),
+        status: formDataPolicy.status,
+        payment_type: formDataPolicy.paymentType,
+        installment_count: formDataPolicy.installmentsCount,
+        payment_id: formDataPolicy.payId,
+        payment_link: formDataPolicy.paymentLink,
+      }, {
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          customer_national_code: formDataPolicy.customerNationalCode,
-          insurance_type: formDataPolicy.type,
-          details: formDataPolicy.vehicle,
-          start_date: moment(formDataPolicy.startDate, "jYYYY/jMM/jDD").format("YYYY-MM-DD"),
-          end_date: moment(formDataPolicy.endDate, "jYYYY/jMM/jDD").format("YYYY-MM-DD"),
-          premium: formDataPolicy.premium.replace(/,/g, ''),
-          status: formDataPolicy.status,
-          payment_type: formDataPolicy.paymentType,
-          installment_count: formDataPolicy.installmentsCount,
-          payment_id: formDataPolicy.payId,
-          payment_link: formDataPolicy.paymentLink,
-        }),
       });
-      if (response.ok) {
-        const updatedPolicy = await response.json();
-        setPolicies(
-          policies.map((p) =>
-            p.id === editingPolicy.id
-              ? {
-                  ...p,
-                  customerName: formDataPolicy.customerName,
-                  type: updatedPolicy.insurance_type,
-                  vehicle: updatedPolicy.details,
-                  startDate: formDataPolicy.startDate,
-                  endDate: formDataPolicy.endDate,
-                  premium: updatedPolicy.premium.toString(),
-                  status: updatedPolicy.status,
-                  paymentType: updatedPolicy.payment_type,
-                  payId: updatedPolicy.payment_id,
-                  installmentsCount: updatedPolicy.installment_count,
-                }
-              : p
-          )
-        );
-        toast.success("بیمه‌نامه با موفقیت بروزرسانی شد.");
-        setFormDataPolicy({
-          customerName: "",
-          customerNationalCode: "",
-          policyNumber: "",
-          type: "",
-          vehicle: "",
-          startDate: "",
-          endDate: "",
-          premium: "",
-          status: "فعال",
-          paymentType: "اقساطی",
-          payId: "",
-          paymentLink: "",
-          installmentsCount: 0,
-          pdfFile: null,
-        });
-        setShowAddPolicyForm(false);
-        setEditingPolicy(null);
-      } else {
-        toast.error('خطا در بروزرسانی بیمه‌نامه');
-      }
+      const updatedPolicy = response.data;
+      setPolicies(
+        policies.map((p) =>
+          p.id === editingPolicy.id
+            ? {
+                ...p,
+                customerName: formDataPolicy.customerName,
+                customerNationalCode: formDataPolicy.customerNationalCode,
+                policyNumber: formDataPolicy.policyNumber,
+                type: updatedPolicy.insurance_type,
+                vehicle: updatedPolicy.details,
+                startDate: formDataPolicy.startDate,
+                endDate: formDataPolicy.endDate,
+                premium: updatedPolicy.premium.toString(),
+                status: updatedPolicy.status,
+                paymentType: updatedPolicy.payment_type,
+                payId: updatedPolicy.payment_id,
+                paymentLink: updatedPolicy.payment_link,
+                installmentsCount: updatedPolicy.installment_count,
+              }
+            : p
+        )
+      );
+      toast.success("بیمه‌نامه با موفقیت بروزرسانی شد.");
+      setFormDataPolicy({
+        customerName: "",
+        customerNationalCode: "",
+        policyNumber: "",
+        type: "",
+        vehicle: "",
+        startDate: "",
+        endDate: "",
+        premium: "",
+        status: "فعال",
+        paymentType: "اقساطی",
+        payId: "",
+        paymentLink: "",
+        installmentsCount: 0,
+        pdfFile: null,
+      });
+      setShowAddPolicyForm(false);
+      setEditingPolicy(null);
     } catch (error) {
       console.error('Error:', error);
       toast.error('خطا در بروزرسانی بیمه‌نامه');
@@ -846,18 +777,13 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const handleDeletePolicy = async () => {
     if (!deletePolicy) return;
     try {
-      const response = await fetch(`http://localhost:3000/admin/policies/${deletePolicy.id}`, {
-        method: 'DELETE',
+      await api.delete(`/admin/policies/${deletePolicy.id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      if (response.ok) {
-        setPolicies(policies.filter((p) => p.id !== deletePolicy.id));
-        setDeletePolicy(null);
-      } else {
-        toast.error('خطا در حذف بیمه‌نامه');
-      }
+      setPolicies(policies.filter((p) => p.id !== deletePolicy.id));
+      setDeletePolicy(null);
     } catch (error) {
       console.error('Error:', error);
       toast.error('خطا در حذف بیمه‌نامه');
@@ -927,17 +853,11 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         pay_link: formDataInstallment.payLink || null,
       };
 
-      const response = await fetch(`http://localhost:3000/installments/${editingInstallment.id}`, {
-        method: 'PUT',
+      await api.put(`/installments/${editingInstallment.id}`, updateData, {
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(updateData),
       });
-      
-      if (response.ok) {
-        // const updatedInstallment = await response.json();
 
         // Update local state with the response
         setInstallments(
@@ -970,11 +890,6 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         });
         setShowAddInstallmentForm(false);
         setEditingInstallment(null);
-      } else {
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-        toast.error('خطا در بروزرسانی قسط');
-      }
     } catch (error) {
       console.error('Error:', error);
       toast.error('خطا در بروزرسانی قسط');

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import type { ComponentType } from 'react';
 import moment from 'moment-jalaali';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
@@ -20,7 +21,6 @@ import {
   User,
   Calendar,
   CreditCard,
-  Download,
   FileText,
   Phone,
   LogOut,
@@ -29,20 +29,73 @@ import {
   ShieldAlert,
 } from "lucide-react";
 
+interface Customer {
+  id: number;
+  full_name: string;
+  national_code: string;
+  insurance_code: string;
+  phone: string;
+  birth_date: string;
+  score: string;
+  role: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface RawPolicy {
+  id: number;
+  insurance_type: string;
+  details: string;
+  start_date: string | null;
+  end_date: string | null;
+  status: string;
+  payment_type: string;
+  payment_id: string | null;
+  payment_link: string | null;
+}
+
+interface Policy {
+  id: number;
+  type: string;
+  vehicle: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+  icon: ComponentType<{ className?: string }>;
+  color: string;
+  bgColor: string;
+  isInstallment: boolean;
+  payId: string | undefined;
+  payLink: string | undefined;
+}
+
+interface RawInstallment {
+  id: number;
+  due_date: string;
+  status: string;
+  pay_link: string;
+  policy_id: number;
+  installment_number: number;
+  amount: string;
+  policy: {
+    insurance_type: string;
+  } | null;
+}
+
 interface CustomerDashboardProps {
   onLogout: () => void;
 }
 
 export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
-  const [insurancePolicies, setInsurancePolicies] = useState<any[]>([]);
-  const [allInstallments, setAllInstallments] = useState<any[]>([]);
-  const [customer, setCustomer] = useState<any>(null);
+  const [insurancePolicies, setInsurancePolicies] = useState<Policy[]>([]);
+  const [allInstallments, setAllInstallments] = useState<RawInstallment[]>([]);
+  const [customer, setCustomer] = useState<Customer | null>(null);
   const [stats, setStats] = useState({
     overdueCount: 0,
     nearExpiryPoliciesCount: 0,
   });
   const [, setLoading] = useState(true);
-  const [selectedPolicy, setSelectedPolicy] = useState<any>(null);
+  const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);
   const [showInstallmentsDialog, setShowInstallmentsDialog] = useState(false);
 
   const token = localStorage.getItem('token');
@@ -73,7 +126,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
 
         setCustomer(customerData);
 
-        const policies = policiesData.map((p: any) => {
+        const policies: Policy[] = policiesData.map((p: RawPolicy) => {
           let icon, color, bgColor;
           switch (p.insurance_type) {
             case 'ثالث': icon = Car; color = 'text-blue-600'; bgColor = 'bg-blue-100'; break;
@@ -102,7 +155,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
         nearExpiryPoliciesCount = policies.filter(p => p.status === 'نزدیک انقضا').length;
         setInsurancePolicies(policies);
 
-        const processedInstallments = installmentsData.map((inst: any) => {
+        const processedInstallments: RawInstallment[] = installmentsData.map((inst: RawInstallment) => {
           const momentDueDate = moment(inst.due_date);
           let status = inst.status;
           if (status !== 'پرداخت شده') {
@@ -154,11 +207,12 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
       await navigator.clipboard.writeText(text);
       toast.success('شناسه پرداخت کپی شد!');
     } catch (err) {
+      console.error(err)
       toast.error('خطا در کپی کردن');
     }
   };
 
-  const handlePayLink = (link: string) => {
+  const handlePayLink = (link: string | undefined) => {
     if (!link) return;
     let absoluteUrl = link;
     if (!/^https?:\/\//i.test(link)) {
@@ -167,7 +221,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
     window.open(absoluteUrl, '_blank');
   };
 
-  const getScoreDescription = (score: string) => {
+  const getScoreDescription = (score: string | undefined) => {
     if (!score) return '';
     switch (score) {
       case 'A': return 'عالی';
@@ -355,6 +409,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
                               a.click();
                               window.URL.revokeObjectURL(url);
                             } catch (error) {
+                              console.error(error)
                               toast.error('خطا در دانلود فایل');
                             }
                           }}>

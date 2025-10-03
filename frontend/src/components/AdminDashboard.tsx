@@ -172,12 +172,57 @@ interface Installment {
   customerNationalCode?: string;
 }
 
+interface CustomerAPI {
+  id: number;
+  full_name: string;
+  national_code: string;
+  phone: string;
+  birth_date?: string;
+  score?: string;
+  insurance_code?: string;
+  created_at?: string;
+}
+
+interface PolicyAPI {
+  id: number;
+  customer?: {
+    full_name: string;
+    national_code: string;
+  };
+  policy_number?: string;
+  insurance_type: string;
+  details: string;
+  start_date?: string;
+  end_date?: string;
+  premium: string;
+  status: string;
+  payment_type: string;
+  payment_id?: string;
+  payment_link?: string;
+  installment_count?: number;
+}
+
+interface InstallmentAPI {
+  id: number;
+  customer?: {
+    full_name: string;
+    national_code: string;
+  };
+  policy?: {
+    insurance_type: string;
+  };
+  amount: string;
+  due_date: string;
+  status: string;
+  pay_link?: string;
+}
+
 export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const { blogs, addBlog, updateBlog, deleteBlog } = useBlogs();
   const [searchQuery, setSearchQuery] = useState("");
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [policies, setPolicies] = useState<Policy[]>([]);
-  const [installments, setInstallments] = useState<any[]>([]);
+  const [installments, setInstallments] = useState<Installment[]>([]);
   const [, setLoading] = useState(true);
   const [stats, setStats] = useState({
     customersCount: 0,
@@ -279,7 +324,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         console.error('Expected array for customers data');
         return;
       }
-      setCustomers(data.map((c: any) => ({
+      setCustomers(data.map((c: CustomerAPI) => ({
         id: c.id ? c.id.toString() : '',
         name: c.full_name,
         nationalCode: c.national_code,
@@ -289,7 +334,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         joinDate: c.created_at ? new Date(c.created_at).toLocaleDateString('fa-IR') : '',
         activePolicies: 0, // Calculate or fetch separately
         status: 'فعال', // Default
-        score: c.score || 'A',
+        score: (c.score as 'A' | 'B' | 'C' | 'D') || 'A',
         password: c.insurance_code,
       })));
     } catch (error) {
@@ -316,7 +361,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         console.error('Expected array for policies data');
         return;
       }
-      setPolicies(data.map((p: any) => ({
+      setPolicies(data.map((p: PolicyAPI) => ({
         id: p.id.toString(),
         customerName: p.customer ? p.customer.full_name : 'Unknown',
         customerNationalCode: p.customer ? p.customer.national_code : '',
@@ -338,7 +383,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
       setCustomers(prevCustomers =>
         prevCustomers.map(customer => ({
           ...customer,
-          activePolicies: data.filter((p: any) => p.customer && p.customer.national_code === customer.nationalCode).length,
+          activePolicies: data.filter((p: PolicyAPI) => p.customer && p.customer.national_code === customer.nationalCode).length,
         }))
       );
 
@@ -400,7 +445,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
           return;
         }
           const now = moment();
-          const processedInstallments = data.map((i: any) => {
+          const processedInstallments = data.map((i: InstallmentAPI) => {
             const dueDate = new Date(i.due_date);
             const dueDateMoment = moment(i.due_date);
             const daysOverdue = dueDateMoment.isBefore(now) ? now.diff(dueDateMoment, 'days') : 0;
@@ -846,7 +891,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
       }
 
       // Prepare the update data according to backend entity structure
-      const updateData: any = {
+      const updateData = {
         amount: parseFloat(formDataInstallment.amount.replace(/,/g, '')),
         due_date: moment(formDataInstallment.dueDate, "jYYYY/jMM/jDD").format("YYYY-MM-DD"),
         status: formDataInstallment.status,

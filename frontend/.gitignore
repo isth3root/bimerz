@@ -112,3 +112,5 @@ dist/
 # Miscellaneous
 .DS_Store
 Thumbs.db
+
+.env.production

@@ -141,8 +141,8 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
             id: p.id,
             type: p.insurance_type,
             vehicle: p.details,
-            startDate: p.start_date ? new Date(p.start_date).toLocaleDateString('fa-IR') : '',
-            endDate: p.end_date ? new Date(p.end_date).toLocaleDateString('fa-IR') : '',
+            startDate: p.start_date || '',
+            endDate: p.end_date || '',
             status: p.status,
             icon,
             color,
@@ -156,7 +156,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
         setInsurancePolicies(policies);
 
         const processedInstallments: RawInstallment[] = installmentsData.map((inst: RawInstallment) => {
-          const momentDueDate = moment(inst.due_date);
+          const momentDueDate = moment(inst.due_date, "jYYYY/jMM/jDD");
           let status = inst.status;
           if (status !== 'پرداخت شده') {
             if (momentDueDate.isBefore(moment(), 'day')) {
@@ -449,7 +449,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className='text-right'>نوع بیمه</TableHead>
+                  <TableHead className='text-right'>بیمه</TableHead>
                   <TableHead className='text-right'>وضعیت</TableHead>
                   <TableHead className='text-right'>شماره</TableHead>
                   <TableHead className='text-right'>سررسید</TableHead>
@@ -467,7 +467,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
                       <TableCell>{installment.policy?.insurance_type || 'N/A'}</TableCell>
                       <TableCell>{getPaymentStatusBadge(installment.status)}</TableCell>
                       <TableCell>{installment.installment_number}</TableCell>
-                      <TableCell>{new Date(installment.due_date).toLocaleDateString('fa-IR')}</TableCell>
+                      <TableCell>{installment.due_date}</TableCell>
                       <TableCell>
                         {parseFloat(installment.amount).toLocaleString('fa-IR')} ریال
                       </TableCell>
@@ -495,7 +495,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className='text-right'>نوع بیمه</TableHead>
+                    <TableHead className='text-right'>بیمه</TableHead>
                     <TableHead className='text-right'>شماره</TableHead>
                     <TableHead className='text-right'>مبلغ</TableHead>
                     <TableHead className='text-right'>سررسید</TableHead>
@@ -512,7 +512,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
                         <TableCell>{installment.policy?.insurance_type || 'N/A'}</TableCell>
                         <TableCell>{installment.installment_number}</TableCell>
                         <TableCell>{parseFloat(installment.amount).toLocaleString('fa-IR')} ریال</TableCell>
-                        <TableCell>{new Date(installment.due_date).toLocaleDateString('fa-IR')}</TableCell>
+                        <TableCell>{installment.due_date}</TableCell>
                         <TableCell>{getPaymentStatusBadge(installment.status)}</TableCell>
                       </TableRow>
                     ))

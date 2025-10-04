@@ -58,7 +58,7 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
           <CardHeader className="text-center pb-4">
             <CardTitle>ورود به حساب کاربری</CardTitle>
             <CardDescription>
-              لطفاً کد ملی و کد بیمه‌گذار خود را وارد کنید
+              لطفاً کد ملی و شماره تماس  خود را وارد کنید
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -68,7 +68,7 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
                 <Input
                   id="nationalCode"
                   type="text"
-                  placeholder="نام کاربری"
+                  placeholder="کد ملی"
                   value={nationalCode}
                   onChange={(e) => setNationalCode(e.target.value)}
                   maxLength={10}
@@ -82,7 +82,7 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
                 <Input
                   id="insuranceCode"
                   type="password"
-                  placeholder="رمزعبور"
+                  placeholder="شماره تماس"
                   value={insuranceCode}
                   onChange={(e) => setInsuranceCode(e.target.value)}
                   required

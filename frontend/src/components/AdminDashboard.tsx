@@ -54,17 +54,17 @@ import { DatePicker } from "zaman";
 import moment from "moment-jalaali";
 
 // Client-only Persian date picker component using zaman
-const ClientOnlyDatePicker = React.forwardRef<HTMLDivElement, {
-  value: string;
-  onChange: (date: string) => void;
-  placeholder: string;
-  id?: string;
-}>(({
+const ClientOnlyDatePicker = ({
   value,
   onChange,
   placeholder,
   id,
-}, ref) => {
+}: {
+  value: string;
+  onChange: (date: string) => void;
+  placeholder: string;
+  id?: string;
+}) => {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -97,7 +97,7 @@ const ClientOnlyDatePicker = React.forwardRef<HTMLDivElement, {
 
   if (!isClient) {
     return (
-      <div ref={ref} id={id} className="flex items-center gap-2 border rounded-md px-3 py-2 text-sm bg-white">
+      <div id={id} className="flex items-center gap-2 border rounded-md px-3 py-2 text-sm bg-white">
         <Calendar className="h-4 w-4 text-gray-400" />
         <span>{placeholder}</span>
       </div>
@@ -106,7 +106,7 @@ const ClientOnlyDatePicker = React.forwardRef<HTMLDivElement, {
 
   const parsedDate = parsePersianDate(value);
   return (
-    <div ref={ref} id={id}>
+    <div id={id}>
       <DatePicker
         defaultValue={parsedDate || undefined}
         onChange={handleDateChange}
@@ -121,7 +121,7 @@ const ClientOnlyDatePicker = React.forwardRef<HTMLDivElement, {
       />
     </div>
   );
-});
+};
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -368,8 +368,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         policyNumber: p.policy_number,
         type: p.insurance_type,
         vehicle: p.details,
-        startDate: p.start_date ? moment(p.start_date).format("jYYYY/jMM/jDD") : '',
-        endDate: p.end_date ? moment(p.end_date).format("jYYYY/jMM/jDD") : '',
+        startDate: p.start_date || '',
+        endDate: p.end_date || '',
         premium: p.premium.toString(),
         status: p.status,
         paymentType: p.payment_type,
@@ -446,10 +446,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         }
           const now = moment();
           const processedInstallments = data.map((i: InstallmentAPI) => {
-            const dueDate = new Date(i.due_date);
-            const dueDateMoment = moment(i.due_date);
-            const daysOverdue = dueDateMoment.isBefore(now) ? now.diff(dueDateMoment, 'days') : 0;
-
+            const dueDateMoment = moment(i.due_date, "jYYYY/jMM/jDD");
             let status = i.status;
             if (status !== 'پرداخت شده') {
               if (dueDateMoment.isBefore(now)) {
@@ -458,13 +455,14 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 status = "آینده";
               }
             }
+            const daysOverdue = status === 'معوق' ? now.diff(dueDateMoment, 'days') : 0;
 
             return {
               id: i.id.toString(),
               customerName: i.customer ? i.customer.full_name : 'Unknown',
               policyType: i.policy ? i.policy.insurance_type : 'Unknown',
               amount: i.amount.toString(),
-              dueDate: moment(dueDate).format("jYYYY/jMM/jDD"),
+              dueDate: i.due_date,
               status,
               daysOverdue,
               payLink: i.pay_link || '',
@@ -691,8 +689,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
       formData.append('policy_number', formDataPolicy.policyNumber);
       formData.append('insurance_type', formDataPolicy.type);
       formData.append('details', formDataPolicy.vehicle);
-      formData.append('start_date', moment(formDataPolicy.startDate, "jYYYY/jMM/jDD").format("YYYY-MM-DD"));
-      formData.append('end_date', moment(formDataPolicy.endDate, "jYYYY/jMM/jDD").format("YYYY-MM-DD"));
+      formData.append('start_date', formDataPolicy.startDate);
+      formData.append('end_date', formDataPolicy.endDate);
       formData.append('premium', formDataPolicy.premium.replace(/,/g, ''));
       formData.append('status', formDataPolicy.status);
       formData.append('payment_type', formDataPolicy.paymentType);
@@ -758,8 +756,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         policy_number: formDataPolicy.policyNumber,
         insurance_type: formDataPolicy.type,
         details: formDataPolicy.vehicle,
-        start_date: moment(formDataPolicy.startDate, "jYYYY/jMM/jDD").format("YYYY-MM-DD"),
-        end_date: moment(formDataPolicy.endDate, "jYYYY/jMM/jDD").format("YYYY-MM-DD"),
+        start_date: formDataPolicy.startDate, // Already in Jalaali format
+        end_date: formDataPolicy.endDate, // Already in Jalaali format
         premium: formDataPolicy.premium.replace(/,/g, ''),
         status: formDataPolicy.status,
         payment_type: formDataPolicy.paymentType,
@@ -893,7 +891,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
       // Prepare the update data according to backend entity structure
       const updateData = {
         amount: parseFloat(formDataInstallment.amount.replace(/,/g, '')),
-        due_date: moment(formDataInstallment.dueDate, "jYYYY/jMM/jDD").format("YYYY-MM-DD"),
+        due_date: formDataInstallment.dueDate, // Already in Jalaali format
         status: formDataInstallment.status,
         pay_link: formDataInstallment.payLink || null,
       };
@@ -945,6 +943,21 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
     if (!deleteInstallment) return;
     setInstallments(installments.filter((i) => i.id !== deleteInstallment.id));
     setDeleteInstallment(null);
+  };
+
+  const handleStatusChange = async (id: string, status: string) => {
+    try {
+      await api.put(`/installments/${id}`, { status }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setInstallments(installments.map(i => i.id === id ? { ...i, status } : i));
+      toast.success("وضعیت قسط بروزرسانی شد.");
+    } catch (error) {
+      console.error(error);
+      toast.error("خطا در بروزرسانی وضعیت");
+    }
   };
 
   const openEditInstallmentDialog = (installment: Installment) => {
@@ -2290,7 +2303,19 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                             </div>
                           </TableCell>
                           <TableCell>
-                            {getStatusBadge(installment.status)}
+                            <Select
+                              value={installment.status}
+                              onValueChange={(value) => handleStatusChange(installment.id, value)}
+                            >
+                              <SelectTrigger className="w-32">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="معوق">معوق</SelectItem>
+                                <SelectItem value="آینده">آینده</SelectItem>
+                                <SelectItem value="پرداخت شده">پرداخت شده</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </TableCell>
                           <TableCell>
                             {installment.status === 'پرداخت شده' ? (

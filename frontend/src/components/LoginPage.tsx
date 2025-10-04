@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 import api from '../utils/api';
@@ -17,6 +17,7 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
   const [nationalCode, setNationalCode] = useState('');
   const [insuranceCode, setInsuranceCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,15 +80,24 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
               
               <div className="space-y-2">
                 <Label htmlFor="insuranceCode">رمزعبور</Label>
-                <Input
-                  id="insuranceCode"
-                  type="password"
-                  placeholder="شماره تماس"
-                  value={insuranceCode}
-                  onChange={(e) => setInsuranceCode(e.target.value)}
-                  required
-                  className="text-right"
-                />
+                <div className="relative">
+                  <Input
+                    id="insuranceCode"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="شماره تماس"
+                    value={insuranceCode}
+                    onChange={(e) => setInsuranceCode(e.target.value)}
+                    required
+                    className="text-right pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
 
               <Button 

@@ -84,34 +84,34 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-              <nav className="flex flex-col gap-4 mt-8">
+              <nav className="flex flex-col gap-6 mt-8 px-4">
                 <button
                   onClick={() => { onNavigate('/'); setIsOpen(false); }}
-                  className={`text-right transition-colors ${currentPage === 'home' ? 'text-green-600 font-semibold' : 'text-gray-700 hover:text-green-600'}`}
+                  className={`w-full text-center py-3 px-4 rounded-lg transition-colors ${currentPage === 'home' ? 'bg-green-100 text-green-600 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
                 >
                   صفحه اصلی
                 </button>
                 <button
                   onClick={() => { onNavigate('services'); setIsOpen(false); }}
-                  className={`text-right transition-colors ${currentPage === 'services' ? 'text-green-600 font-semibold' : 'text-gray-700 hover:text-green-600'}`}
+                  className={`w-full text-center py-3 px-4 rounded-lg transition-colors ${currentPage === 'services' ? 'bg-green-100 text-green-600 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
                 >
                   خدمات
                 </button>
                 <button
                   onClick={() => { onNavigate('blogs'); setIsOpen(false); }}
-                  className={`text-right transition-colors ${currentPage === 'blogs' ? 'text-green-600 font-semibold' : 'text-gray-700 hover:text-green-600'}`}
+                  className={`w-full text-center py-3 px-4 rounded-lg transition-colors ${currentPage === 'blogs' ? 'bg-green-100 text-green-600 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
                 >
                   وبلاگ
                 </button>
                 <button
                   onClick={() => { onNavigate('about'); setIsOpen(false); }}
-                  className={`text-right transition-colors ${currentPage === 'about' ? 'text-green-600 font-semibold' : 'text-gray-700 hover:text-green-600'}`}
+                  className={`w-full text-center py-3 px-4 rounded-lg transition-colors ${currentPage === 'about' ? 'bg-green-100 text-green-600 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
                 >
                   درباره ما
                 </button>
                 <button
                   onClick={() => { onNavigate('contact'); setIsOpen(false); }}
-                  className={`text-right transition-colors ${currentPage === 'contact' ? 'text-green-600 font-semibold' : 'text-gray-700 hover:text-green-600'}`}
+                  className={`w-full text-center py-3 px-4 rounded-lg transition-colors ${currentPage === 'contact' ? 'bg-green-100 text-green-600 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
                 >
                   تماس با ما
                 </button>

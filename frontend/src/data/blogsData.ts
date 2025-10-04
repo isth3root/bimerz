@@ -1,11 +1,10 @@
 export interface Blog {
   id: string;
   title: string;
-  excerpt: string;
+  summary: string;
   content: string;
-  author?: string;
   date: string;
-  imageUrl?: string;
+  image_path?: string;
   category: string;
 }
 
@@ -13,7 +12,7 @@ export const blogsData: Blog[] = [
   {
     id: '1',
     title: 'راهنمای خرید بیمه خودرو',
-    excerpt: 'نکات مهم که باید قبل از خرید بیمه خودرو بدانید تا بهترین انتخاب را داشته باشید',
+    summary: 'نکات مهم که باید قبل از خرید بیمه خودرو بدانید تا بهترین انتخاب را داشته باشید',
     content: `بیمه خودرو یکی از ضروری‌ترین انواع بیمه است که هر راننده باید آن را داشته باشد. در این مقاله به بررسی نکات مهم خرید بیمه خودرو می‌پردازیم.
 
     ابتدا باید بدانید که بیمه خودرو به دو نوع اصلی تقسیم می‌شود: بیمه شخص ثالث و بیمه بدنه. بیمه شخص ثالث پوشش خسارت به اشخاص ثالث را بر عهده دارد، در حالی که بیمه بدنه خسارت وارد شده به خودروی شما را پوشش می‌دهد.
@@ -25,15 +24,14 @@ export const blogsData: Blog[] = [
     ۴. بررسی شرایط فسخ بیمه
 
     با انتخاب درست بیمه خودرو، می‌توانید از پوشش مناسبی برای خودروی خود برخوردار شوید.`,
-    author: 'احمد محمدی',
     date: '۱۴۰۳/۰۶/۱۵',
-    imageUrl: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1080&q=80',
+    image_path: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1080&q=80',
     category: 'بیمه خودرو'
   },
   {
     id: '2',
     title: 'مزایای بیمه آتش‌سوزی منزل',
-    excerpt: 'چرا بیمه آتش‌سوزی ضروری است و چه مواردی را پوشش می‌دهد',
+    summary: 'چرا بیمه آتش‌سوزی ضروری است و چه مواردی را پوشش می‌دهد',
     content: `بیمه آتش‌سوزی منزل یکی از مهم‌ترین بیمه‌های زندگی است که می‌تواند خسارت‌های سنگین ناشی از حوادث را پوشش دهد.
 
     مزایای بیمه آتش‌سوزی منزل:
@@ -43,15 +41,14 @@ export const blogsData: Blog[] = [
     - پوشش مسئولیت مدنی
 
     انتخاب بیمه آتش‌سوزی مناسب می‌تواند آرامش خاطر شما را تضمین کند.`,
-    author: 'فاطمه احمدی',
     date: '۱۴۰۳/۰۶/۱۰',
-    imageUrl: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1080&q=80',
+    image_path: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1080&q=80',
     category: 'بیمه آتش‌سوزی'
   },
   {
     id: '3',
     title: 'قوانین جدید بیمه شخص ثالث',
-    excerpt: 'آخرین تغییرات قانونی در بیمه شخص ثالث و تأثیر آن بر بیمه‌گذاران',
+    summary: 'آخرین تغییرات قانونی در بیمه شخص ثالث و تأثیر آن بر بیمه‌گذاران',
     content: `قوانین بیمه شخص ثالث در سال‌های اخیر تغییرات زیادی داشته است. در این مقاله به بررسی آخرین تغییرات می‌پردازیم.
 
     تغییرات مهم:
@@ -61,9 +58,8 @@ export const blogsData: Blog[] = [
     - شرایط جدید برای بیمه نامه‌های قدیمی
 
     آگاهی از این تغییرات برای انتخاب بیمه مناسب ضروری است.`,
-    author: 'علی رضایی',
     date: '۱۴۰۳/۰۶/۰۵',
-    imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1080&q=80',
+    image_path: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1080&q=80',
     category: 'قوانین بیمه'
   }
 ];

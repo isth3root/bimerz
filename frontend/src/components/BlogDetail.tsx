@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
-import { Calendar, User, ArrowRight } from "lucide-react";
+import { Calendar, ArrowRight } from "lucide-react";
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { useBlogs } from '../hooks/useBlogs';
 
@@ -46,10 +46,6 @@ export function BlogDetail() {
 
           <div className="flex items-center gap-6 text-gray-600 mb-6">
             <div className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              <span>{blog.author}</span>
-            </div>
-            <div className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
               <span>{blog.date}</span>
             </div>
@@ -57,12 +53,12 @@ export function BlogDetail() {
         </div>
 
         {/* Article Image */}
-        {blog.imageUrl && (
+        {blog.image_path && (
           <div className="mb-8">
             <ImageWithFallback
-              src={blog.imageUrl}
+              src={`${import.meta.env.VITE_DEV_URI}${blog.image_path}`}
               alt={blog.title}
-              className="w-full h-96 object-cover rounded-lg"
+              className="w-full h-64 sm:h-80 md:h-96 object-cover rounded-lg"
             />
           </div>
         )}
@@ -72,7 +68,7 @@ export function BlogDetail() {
           <CardContent className="p-8">
             <div className="prose prose-lg max-w-none">
               <p className="text-xl text-gray-600 mb-6 leading-relaxed">
-                {blog.excerpt}
+                {blog.summary}
               </p>
 
               <div className="whitespace-pre-line leading-relaxed">

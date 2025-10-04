@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -34,9 +34,18 @@ import {
 } from "./ui/select";
 
 import { PriceInput } from "./PriceInput";
-import { useBlogs } from "../hooks/useBlogs";
 import { motion, AnimatePresence } from "framer-motion";
-import type { Blog } from "../data/blogsData";
+import type { Blog } from "../hooks/useBlogs";
+
+interface BlogAPI {
+  id: number;
+  title: string;
+  summary: string;
+  content: string;
+  category: string;
+  image_path?: string;
+  created_at: string;
+}
 import {
   Users,
   FileText,
@@ -218,7 +227,7 @@ interface InstallmentAPI {
 }
 
 export function AdminDashboard({ onLogout }: AdminDashboardProps) {
-  const { blogs, addBlog, updateBlog, deleteBlog } = useBlogs();
+  const [blogs, setBlogs] = useState<Blog[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [policies, setPolicies] = useState<Policy[]>([]);
@@ -286,16 +295,16 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   const [installmentSearchQuery, setInstallmentSearchQuery] = useState("");
   const [sortField, setSortField] = useState<string>("");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [sortState, setSortState] = useState<Record<string, number>>({});
 
   const [blogSearchQuery, setBlogSearchQuery] = useState("");
   const [editingBlog, setEditingBlog] = useState<Blog | null>(null);
   const [formDataBlog, setFormDataBlog] = useState({
     title: "",
-    excerpt: "",
+    summary: "",
     content: "",
     date: "",
-    imageUrl: "",
+    imageFile: null as File | null,
     category: "",
   });
   const [activeTab, setActiveTab] = useState("customers");
@@ -304,6 +313,27 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const token = localStorage.getItem('token');
 
   useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        const response = await api.get('/blogs', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = response.data.map((blog: BlogAPI) => ({
+          id: blog.id.toString(),
+          title: blog.title,
+          summary: blog.summary,
+          content: blog.content,
+          category: blog.category,
+          date: new Date(blog.created_at).toLocaleDateString('fa-IR'),
+          image_path: blog.image_path,
+        }));
+        setBlogs(data);
+      } catch (error) {
+        console.error('Error fetching blogs:', error);
+      }
+    };
 
     if (!token) {
       console.error("token not found");
@@ -428,6 +458,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
     if (token) {
       fetchCustomers();
       fetchPolicies();
+      fetchBlogs();
     }
   }, [token, onLogout]);
 
@@ -983,83 +1014,189 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   );
 
   const handleSort = (field: string) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    setSortState(prev => {
+      const newState = { ...prev };
+      if (sortField === field) {
+        newState[field] = (newState[field] || 0) + 1;
+        if (field === 'status' && newState[field] > 2) newState[field] = 0;
+        else if (field === 'amount' && newState[field] > 1) newState[field] = 0;
+        else if (newState[field] > 1) newState[field] = 0;
+      } else {
+        setSortField(field);
+        newState[field] = 0;
+      }
+      return newState;
+    });
+  };
+
+  const getSortValue = (field: string, item: Installment) => {
+    if (field === 'status') {
+      const orders = [
+        ['معوق', 'آینده', 'پرداخت شده'], // 0: overdue first
+        ['آینده', 'معوق', 'پرداخت شده'], // 1: future first
+        ['پرداخت شده', 'معوق', 'آینده'], // 2: paid first
+      ];
+      const order = orders[sortState[field] || 0];
+      return order.indexOf(item.status);
+    } else if (field === 'amount') {
+      return parseFloat(item.amount.replace(/,/g, ''));
+    } else if (field === 'dueDate') {
+      return moment(item.dueDate, "jYYYY/jMM/jDD").valueOf();
     } else {
-      setSortField(field);
-      setSortDirection("asc");
+      return item[field as keyof Installment] as string;
     }
   };
 
   const sortedInstallments = [...filteredInstallments].sort((a, b) => {
     if (!sortField) return 0;
-    const aVal = a[sortField as keyof Installment] as string;
-    const bVal = b[sortField as keyof Installment] as string;
-    if (sortDirection === "asc") {
-      return aVal.localeCompare(bVal);
+    const aVal = getSortValue(sortField, a);
+    const bVal = getSortValue(sortField, b);
+    let cmp = 0;
+    if (typeof aVal === 'number' && typeof bVal === 'number') {
+      cmp = aVal - bVal;
     } else {
-      return bVal.localeCompare(aVal);
+      cmp = String(aVal).localeCompare(String(bVal));
+    }
+    const mode = sortState[sortField] || 0;
+    if (sortField === 'status') {
+      return cmp;
+    } else if (sortField === 'amount') {
+      return mode === 0 ? -cmp : cmp; // 0: desc, 1: asc
+    } else {
+      return mode === 0 ? cmp : -cmp; // 0: asc, 1: desc
     }
   });
 
   const filteredBlogs = blogs.filter(
     (blog) =>
       blog.title.toLowerCase().includes(blogSearchQuery.toLowerCase()) ||
-      (blog.author && blog.author.toLowerCase().includes(blogSearchQuery.toLowerCase())) ||
       blog.category.toLowerCase().includes(blogSearchQuery.toLowerCase())
   );
 
-  const handleAddBlog = () => {
-    if (!formDataBlog.title.trim() || !formDataBlog.excerpt.trim() || !formDataBlog.content.trim() || !formDataBlog.category.trim()) {
+  const handleAddBlog = async () => {
+    if (!formDataBlog.title.trim() || !formDataBlog.summary.trim() || !formDataBlog.content.trim() || !formDataBlog.category.trim()) {
       alert("لطفا تمام فیلدهای مورد نیاز را پر کنید.");
       return;
     }
-    addBlog({
-      ...formDataBlog,
-      date: formDataBlog.date || new Date().toLocaleDateString("fa-IR"),
-    });
-    setFormDataBlog({
-      title: "",
-      excerpt: "",
-      content: "",
-      date: "",
-      imageUrl: "",
-      category: "",
-    });
-    setShowAddBlogForm(false);
+    try {
+      const formData = new FormData();
+      formData.append('title', formDataBlog.title);
+      formData.append('summary', formDataBlog.summary);
+      formData.append('content', formDataBlog.content);
+      formData.append('category', formDataBlog.category);
+      if (formDataBlog.imageFile) {
+        formData.append('image', formDataBlog.imageFile);
+      }
+      await api.post('/admin/blogs', formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      // Refetch blogs
+      const response = await api.get('/blogs');
+      const data = response.data.map((blog: BlogAPI) => ({
+        id: blog.id.toString(),
+        title: blog.title,
+        summary: blog.summary,
+        content: blog.content,
+        category: blog.category,
+        date: new Date(blog.created_at).toLocaleDateString('fa-IR'),
+        image_path: blog.image_path,
+      }));
+      setBlogs(data);
+      setFormDataBlog({
+        title: "",
+        summary: "",
+        content: "",
+        date: "",
+        imageFile: null,
+        category: "",
+      });
+      setShowAddBlogForm(false);
+    } catch (error) {
+      console.error('Error adding blog:', error);
+      alert('خطا در افزودن مقاله');
+    }
   };
 
-  const handleEditBlog = () => {
+  const handleEditBlog = async () => {
     if (!editingBlog) return;
-    updateBlog(editingBlog.id, formDataBlog);
-    setFormDataBlog({
-      title: "",
-      excerpt: "",
-      content: "",
-      date: "",
-      imageUrl: "",
-      category: "",
-    });
-    setShowAddBlogForm(false);
-    setEditingBlog(null);
+    try {
+      await api.put(`/admin/blogs/${editingBlog.id}`, {
+        title: formDataBlog.title,
+        summary: formDataBlog.summary,
+        content: formDataBlog.content,
+        category: formDataBlog.category,
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      // Refetch blogs
+      const response = await api.get('/blogs');
+      const data = response.data.map((blog: BlogAPI) => ({
+        id: blog.id.toString(),
+        title: blog.title,
+        summary: blog.summary,
+        content: blog.content,
+        category: blog.category,
+        date: new Date(blog.created_at).toLocaleDateString('fa-IR'),
+        image_path: blog.image_path,
+      }));
+      setBlogs(data);
+      setFormDataBlog({
+        title: "",
+        summary: "",
+        content: "",
+        date: "",
+        imageFile: null,
+        category: "",
+      });
+      setShowAddBlogForm(false);
+      setEditingBlog(null);
+    } catch (error) {
+      console.error('Error editing blog:', error);
+      alert('خطا در ویرایش مقاله');
+    }
   };
 
   const [deleteBlogId, setDeleteBlogId] = useState<string | null>(null);
 
-  const handleDeleteBlog = () => {
+  const handleDeleteBlog = async () => {
     if (!deleteBlogId) return;
-    deleteBlog(deleteBlogId);
-    setDeleteBlogId(null);
+    try {
+      await api.delete(`/admin/blogs/${deleteBlogId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      // Refetch blogs
+      const response = await api.get('/blogs');
+      const data = response.data.map((blog: BlogAPI) => ({
+        id: blog.id.toString(),
+        title: blog.title,
+        summary: blog.summary,
+        content: blog.content,
+        category: blog.category,
+        date: new Date(blog.created_at).toLocaleDateString('fa-IR'),
+        image_path: blog.image_path,
+      }));
+      setBlogs(data);
+      setDeleteBlogId(null);
+    } catch (error) {
+      console.error('Error deleting blog:', error);
+      alert('خطا در حذف مقاله');
+    }
   };
 
   const openEditBlogDialog = (blog: Blog) => {
     setEditingBlog(blog);
     setFormDataBlog({
       title: blog.title,
-      excerpt: blog.excerpt,
+      summary: blog.summary,
       content: blog.content,
       date: blog.date,
-      imageUrl: blog.imageUrl || "",
+      imageFile: null, // For edit, not handling image change yet
       category: blog.category,
     });
     setShowAddBlogForm(true);
@@ -2222,11 +2359,11 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       <TableHead className="text-left pl-8">عملیات</TableHead>
                       <TableHead
                         onClick={() => handleSort("status")}
-                        className="cursor-pointer hover:bg-gray-50 text-right"
+                        className="cursor-pointer hover:bg-gray-50 text-center"
                       >
                         وضعیت
                       </TableHead>
-                      <TableHead className="text-right">تعداد روز تاخیر</TableHead>
+                      <TableHead className="text-right">روز تاخیر</TableHead>
                       <TableHead
                         onClick={() => handleSort("dueDate")}
                         className="cursor-pointer hover:bg-gray-50 text-right"
@@ -2307,7 +2444,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                               value={installment.status}
                               onValueChange={(value) => handleStatusChange(installment.id, value)}
                             >
-                              <SelectTrigger className="w-32">
+                              <SelectTrigger className={`w-32 ${installment.status === 'معوق' ? 'bg-red-300' : installment.status === 'آینده' ? 'bg-blue-300' : 'bg-green-300'}`}>
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -2400,17 +2537,17 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         />
                       </div>
                       <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="blog-excerpt" className="text-right">
+                        <Label htmlFor="blog-summary" className="text-right">
                           خلاصه
                         </Label>
                         <Input
-                          id="blog-excerpt"
-                          name="blog-excerpt"
-                          value={formDataBlog.excerpt}
+                          id="blog-summary"
+                          name="blog-summary"
+                          value={formDataBlog.summary}
                           onChange={(e) =>
                             setFormDataBlog({
                               ...formDataBlog,
-                              excerpt: e.target.value,
+                              summary: e.target.value,
                             })
                           }
                           className="col-span-3"
@@ -2460,9 +2597,9 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                           onChange={(e) =>
                             setFormDataBlog({
                               ...formDataBlog,
-                              imageUrl: e.target.files
-                                ? e.target.files[0].name
-                                : "",
+                              imageFile: e.target.files
+                                ? e.target.files[0]
+                                : null,
                             })
                           }
                           className="col-span-3"
@@ -2496,10 +2633,10 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                             setEditingBlog(null);
                             setFormDataBlog({
                               title: "",
-                              excerpt: "",
+                              summary: "",
                               content: "",
                               date: "",
-                              imageUrl: "",
+                              imageFile: null,
                               category: "",
                             });
                             setShowAddBlogForm(false);

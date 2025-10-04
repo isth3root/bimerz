@@ -1,44 +1,74 @@
 import { useState, useEffect } from 'react';
-import type { Blog } from '../data/blogsData';
-import { blogsData } from '../data/blogsData';
+import api from '../utils/api';
+
+export interface Blog {
+  id: string;
+  title: string;
+  summary: string;
+  content: string;
+  category: string;
+  image_path?: string;
+  date: string;
+}
+
+interface BlogAPI {
+  id: number;
+  title: string;
+  summary: string;
+  content: string;
+  category: string;
+  image_path?: string;
+  created_at: string;
+}
 
 export function useBlogs() {
   const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load from localStorage or use default data
-    const storedBlogs = localStorage.getItem('blogs');
-    if (storedBlogs) {
-      setBlogs(JSON.parse(storedBlogs));
-    } else {
-      setBlogs(blogsData);
-      localStorage.setItem('blogs', JSON.stringify(blogsData));
-    }
+    const fetchBlogs = async () => {
+      try {
+        const response = await api.get('/blogs');
+        const data = response.data.map((blog: BlogAPI) => ({
+          id: blog.id.toString(),
+          title: blog.title,
+          summary: blog.summary,
+          content: blog.content,
+          category: blog.category,
+          date: new Date(blog.created_at).toLocaleDateString('fa-IR'),
+          image_path: blog.image_path,
+        }));
+        setBlogs(data);
+      } catch (error) {
+        console.error('Error fetching blogs:', error);
+        setBlogs([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBlogs();
   }, []);
 
   const addBlog = (blog: Omit<Blog, 'id'>) => {
+    // This is for admin, but since we're fetching from API, perhaps not needed
+    // But to keep compatibility, maybe just update local state
     const newBlog: Blog = {
       ...blog,
       id: Date.now().toString()
     };
-    const updatedBlogs = [...blogs, newBlog];
-    setBlogs(updatedBlogs);
-    localStorage.setItem('blogs', JSON.stringify(updatedBlogs));
+    setBlogs([...blogs, newBlog]);
   };
 
   const updateBlog = (id: string, updatedBlog: Partial<Blog>) => {
-    const updatedBlogs = blogs.map(blog =>
+    setBlogs(blogs.map(blog =>
       blog.id === id ? { ...blog, ...updatedBlog } : blog
-    );
-    setBlogs(updatedBlogs);
-    localStorage.setItem('blogs', JSON.stringify(updatedBlogs));
+    ));
   };
 
   const deleteBlog = (id: string) => {
-    const updatedBlogs = blogs.filter(blog => blog.id !== id);
-    setBlogs(updatedBlogs);
-    localStorage.setItem('blogs', JSON.stringify(updatedBlogs));
+    setBlogs(blogs.filter(blog => blog.id !== id));
   };
 
-  return { blogs, addBlog, updateBlog, deleteBlog };
+  return { blogs, addBlog, updateBlog, deleteBlog, loading };
 }

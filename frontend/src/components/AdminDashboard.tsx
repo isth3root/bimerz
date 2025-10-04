@@ -1110,8 +1110,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">A</span>
+              <div className="w-12 h-10 rounded-lg flex items-center justify-center">
+                <img src="/logo.png" alt="Logo" className="w-12 h-12 rounded-lg object-cover" />
               </div>
               <div>
                 <h1 className="text-lg">پنل مدیریت</h1>

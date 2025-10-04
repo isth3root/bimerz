@@ -10,8 +10,8 @@ export function Footer() {
           {/* Company info */}
           <div>
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">A</span>
+              <div className="w-12 h-10 rounded-lg flex items-center justify-center">
+                <img src="/logo.png" alt="Logo" className="w-12 h-12 rounded-lg object-cover" />
               </div>
               <div>
                 <h3 className="text-xl">بیمه البرز</h3>

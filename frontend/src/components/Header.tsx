@@ -51,12 +51,7 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
             >
               صفحه اصلی
             </button>
-            <button
-              onClick={() => onNavigate('services')}
-              className={`cursor-pointer transition-colors ${currentPage === 'services' ? 'text-green-600 font-semibold' : 'text-gray-700 hover:text-green-600'}`}
-            >
-              خدمات
-            </button>
+            
             <button
               onClick={() => onNavigate('blogs')}
               className={`cursor-pointer transition-colors ${currentPage === 'blogs' ? 'text-green-600 font-semibold' : 'text-gray-700 hover:text-green-600'}`}

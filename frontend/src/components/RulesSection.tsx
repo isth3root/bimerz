@@ -101,7 +101,7 @@ const RulesSection: React.FC = () => {
           >
             <ChevronLeft className="h-6 w-6 text-blue-600" />
           </Button>
-          <div className="relative flex items-center justify-center h-96 lg:h-[28rem] overflow-hidden" style={{ perspective: '1200px' }}>
+          <div className="relative flex items-center justify-center h-96 lg:h-[28rem] xl:h-[36rem] overflow-hidden" style={{ perspective: '1200px' }}>
             <div className="relative w-full max-w-6xl lg:max-w-7xl h-full flex items-center justify-center">
               {[0, 1, 2, 3].map((pos) => {
                 const ruleIndex = (currentIndex + pos) % rules.length;
@@ -109,16 +109,16 @@ const RulesSection: React.FC = () => {
                 return (
                   <Card
                     key={ruleIndex}
-                    className="absolute w-72 h-56 sm:w-80 sm:h-64 md:w-96 md:h-72 lg:w-[28rem] lg:h-80 transition-all duration-700 ease-out shadow-2xl border-0 bg-gradient-to-br from-white to-blue-50 hover:shadow-3xl"
+                    className="absolute w-72 h-56 sm:w-80 sm:h-64 md:w-96 md:h-72 lg:w-[28rem] lg:h-80 xl:w-[32rem] xl:h-96 transition-all duration-700 ease-out shadow-2xl border border-white/20 bg-white/10 backdrop-blur-lg hover:shadow-3xl"
                     style={getCardStyle(pos)}
                   >
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-base sm:text-lg md:text-xl font-bold text-center text-black leading-tight">
+                      <CardTitle className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-center text-black leading-tight">
                         {rule.title}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-0">
-                      <p className="text-xs sm:text-sm md:text-base text-gray-700 text-center leading-relaxed px-2">
+                      <p className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl text-gray-700 text-center leading-relaxed px-2">
                         {rule.description}
                       </p>
                     </CardContent>
@@ -132,20 +132,20 @@ const RulesSection: React.FC = () => {
             className="hidden lg:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 backdrop-blur-sm shadow-xl hover:bg-white border-2 border-blue-200"
             size="icon"
           >
-            <ChevronRight className="h-6 w-6 text-blue-600" />
+            <ChevronRight className="h-6 w-6 text-green-600" />
           </Button>
           {/* Mobile arrows below */}
           <div className="flex justify-center gap-4 mt-8 lg:hidden">
             <Button
               onClick={next}
-              className="bg-green-600 hover:bg-blue-700 text-white shadow-lg"
+              className="bg-green-600 hover:bg-green-700 text-white shadow-lg"
               size="icon"
             >
               <ChevronRight className="h-6 w-6" />
             </Button>
             <Button
               onClick={prev}
-              className="bg-green-600 hover:bg-blue-700 text-white shadow-lg"
+              className="bg-green-600 hover:bg-green-700 text-white shadow-lg"
               size="icon"
             >
               <ChevronLeft className="h-6 w-6" />
@@ -153,7 +153,7 @@ const RulesSection: React.FC = () => {
           </div>
         </div>
       </div>
-    </section>
+  </section>
   );
 };
 

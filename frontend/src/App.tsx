@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-ro
 import { motion } from 'framer-motion';
 import { Toaster } from "sonner";
 import { Header } from './components/Header';
-import { ServicesSection } from './components/ServicesSection';
 import { BlogSection } from './components/BlogSection';
 import RulesSection from './components/RulesSection';
 import { FAQSection } from './components/FAQSection';
@@ -13,7 +12,6 @@ import { CustomerDashboard } from './components/CustomerDashboard';
 import { AdminDashboard } from './components/AdminDashboard';
 import { ContactUs } from './components/ContactUs';
 import { AboutUs } from './components/AboutUs';
-import { Services } from './components/Services';
 import { NotFound } from './components/NotFound';
 import { Blogs } from './components/Blogs';
 import { BlogDetail } from './components/BlogDetail';
@@ -86,14 +84,6 @@ function AppContent() {
             transition={{ duration: 0.8, delay: 0.2 }}
             viewport={{ once: true }}
           >
-            <ServicesSection onNavigate={handleNavigate} />
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            viewport={{ once: true }}
-          >
             <FAQSection />
           </motion.div>
           <Footer />
@@ -117,19 +107,6 @@ function AppContent() {
         <div className="min-h-screen bg-white">
           <Header onNavigate={handleNavigate} currentPage={currentPage} />
           <AboutUs />
-          <Footer />
-        </div>
-      } />
-      <Route path="/services" element={
-        <div className="min-h-screen bg-white">
-          <Header onNavigate={handleNavigate} currentPage={currentPage} />
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <Services />
-          </motion.div>
           <Footer />
         </div>
       } />

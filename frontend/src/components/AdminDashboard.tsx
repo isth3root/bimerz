@@ -178,6 +178,8 @@ interface Policy {
   payId?: string;
   paymentLink?: string;
   installmentsCount?: number;
+  installment_type?: string;
+  first_installment_amount?: string;
   pdfFile?: File | null;
 }
 
@@ -223,6 +225,8 @@ interface PolicyAPI {
   payment_id?: string;
   payment_link?: string;
   installment_count?: number;
+  installment_type?: string;
+  first_installment_amount?: string;
 }
 
 interface InstallmentAPI {
@@ -291,6 +295,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
     payId: "",
     paymentLink: "",
     installmentsCount: 0,
+    installmentType: "تمام قسط",
+    firstInstallmentAmount: "",
     pdfFile: null as File | null,
   });
   const [deletePolicy, setDeletePolicy] = useState<Policy | null>(null);
@@ -437,6 +443,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
           payId: p.payment_id,
           paymentLink: p.payment_link,
           installmentsCount: p.installment_count,
+          installment_type: p.installment_type,
+          first_installment_amount: p.first_installment_amount,
           pdfFile: null,
         })));
         
@@ -782,6 +790,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
       formData.append('status', formDataPolicy.status);
       formData.append('payment_type', formDataPolicy.paymentType);
       formData.append('installment_count', formDataPolicy.installmentsCount.toString());
+      formData.append('installment_type', formDataPolicy.installmentType);
+      formData.append('first_installment_amount', formDataPolicy.firstInstallmentAmount.replace(/,/g, ''));
       formData.append('payment_id', formDataPolicy.payId);
       formData.append('payment_link', formDataPolicy.paymentLink);
       if (formDataPolicy.pdfFile) {
@@ -809,6 +819,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         payId: newPolicy.payment_id,
         paymentLink: newPolicy.payment_link,
         installmentsCount: newPolicy.installment_count,
+        installment_type: newPolicy.installment_type,
+        first_installment_amount: newPolicy.first_installment_amount,
         pdfFile: null,
       }]);
       toast.success("بیمه‌نامه با موفقیت اضافه شد.");
@@ -826,6 +838,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         payId: "",
         paymentLink: "",
         installmentsCount: 0,
+        installmentType: "تمام قسط",
+        firstInstallmentAmount: "",
         pdfFile: null,
       });
       setShowAddPolicyForm(false);
@@ -849,6 +863,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         status: formDataPolicy.status,
         payment_type: formDataPolicy.paymentType,
         installment_count: formDataPolicy.installmentsCount,
+        installment_type: formDataPolicy.installmentType,
+        first_installment_amount: formDataPolicy.firstInstallmentAmount.replace(/,/g, ''),
         payment_id: formDataPolicy.payId,
         payment_link: formDataPolicy.paymentLink,
       }, {
@@ -875,6 +891,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 payId: updatedPolicy.payment_id,
                 paymentLink: updatedPolicy.payment_link,
                 installmentsCount: updatedPolicy.installment_count,
+                installment_type: updatedPolicy.installment_type,
+                first_installment_amount: updatedPolicy.first_installment_amount,
               }
             : p
         )
@@ -894,6 +912,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         payId: "",
         paymentLink: "",
         installmentsCount: 0,
+        installmentType: "تمام قسط",
+        firstInstallmentAmount: "",
         pdfFile: null,
       });
       setShowAddPolicyForm(false);
@@ -936,6 +956,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
       payId: policy.payId || "",
       paymentLink: policy.paymentLink || "",
       installmentsCount: policy.installmentsCount || 0,
+      installmentType: policy.installment_type || "تمام قسط",
+      firstInstallmentAmount: policy.first_installment_amount || "",
       pdfFile: policy.pdfFile || null,
     });
     setShowAddPolicyForm(true);
@@ -1325,6 +1347,36 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
             </div>
 
             <div className="flex items-center gap-3">
+              {userRole === 'admin' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    try {
+                      const response = await api.get('/admin/backup', {
+                        headers: {
+                          Authorization: `Bearer ${token}`,
+                        },
+                        responseType: 'blob',
+                      });
+                      const url = URL.createObjectURL(response.data);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = 'backup.json';
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      URL.revokeObjectURL(url);
+                      toast.success('پشتیبان‌گیری با موفقیت انجام شد');
+                    } catch (error) {
+                      console.error('Error downloading backup:', error);
+                      toast.error('خطا در پشتیبان‌گیری');
+                    }
+                  }}
+                >
+                  پشتیبان‌گیری
+                </Button>
+              )}
               <Button variant="ghost" size="sm" onClick={() => { localStorage.removeItem('token'); onLogout(); }}>
                 <LogOut className="h-4 w-4 ml-2" />
                 خروج
@@ -2246,6 +2298,47 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         />
                       </div>
                       <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="policy-installmentType" className="text-right">
+                          نوع قسط
+                        </Label>
+                        <Select
+                          name="installmentType"
+                          value={formDataPolicy.installmentType}
+                          onValueChange={(value: string) =>
+                            setFormDataPolicy({
+                              ...formDataPolicy,
+                              installmentType: value,
+                            })
+                          }
+                          disabled={formDataPolicy.paymentType === "نقدی"}
+                        >
+                          <SelectTrigger className="col-span-3">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="تمام قسط">تمام قسط</SelectItem>
+                            <SelectItem value="پیش پرداخت">پیش پرداخت</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {formDataPolicy.installmentType === "پیش پرداخت" && formDataPolicy.paymentType === "اقساطی" && (
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="policy-firstInstallmentAmount" className="text-right">
+                            مبلغ پیش پرداخت (ریال)
+                          </Label>
+                          <PriceInput
+                            value={formDataPolicy.firstInstallmentAmount}
+                            onChange={(value) =>
+                              setFormDataPolicy({
+                                ...formDataPolicy,
+                                firstInstallmentAmount: value,
+                              })
+                            }
+                            className="col-span-3"
+                          />
+                        </div>
+                      )}
+                      <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="policy-payId" className="text-right">
                           شناسه پرداخت
                         </Label>
@@ -2322,6 +2415,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                               payId: "",
                               paymentLink: "",
                               installmentsCount: 0,
+                              installmentType: "تمام قسط",
+                              firstInstallmentAmount: "",
                               pdfFile: null,
                             });
                             setShowAddPolicyForm(false);

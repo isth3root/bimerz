@@ -23,17 +23,6 @@ export function Footer() {
             </p>
           </div>
 
-          {/* Quick links */}
-          <div>
-            <h4 className="text-lg mb-6">خدمات</h4>
-            <ul className="space-y-3">
-              <li><button><a href="#" className="text-gray-400 hover:text-green-400 transition-colors">بیمه شخص ثالث</a></button></li>
-              <li><a href="#" className="text-gray-400 hover:text-green-400 transition-colors">بیمه بدنه خودرو</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-green-400 transition-colors">بیمه آتش‌سوزی</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-green-400 transition-colors">بیمه مسئولیت مدنی</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-green-400 transition-colors">بیمه منزل</a></li>
-            </ul>
-          </div>
 
           {/* Contact info */}
           <div>

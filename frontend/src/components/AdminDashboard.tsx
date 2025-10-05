@@ -763,7 +763,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   };
 
   const handleAddPolicy = async () => {
-    if (!formDataPolicy.customerName.trim() || !formDataPolicy.customerNationalCode.trim() || !formDataPolicy.type.trim() || !formDataPolicy.vehicle.trim() || !formDataPolicy.startDate.trim() || !formDataPolicy.endDate.trim() || !formDataPolicy.premium.trim()) {
+    if (!formDataPolicy.customerName.trim() || !formDataPolicy.customerNationalCode.trim() || !formDataPolicy.type.trim() || !formDataPolicy.startDate.trim() || !formDataPolicy.premium.trim() || !formDataPolicy.status.trim() || !formDataPolicy.paymentType.trim() || (formDataPolicy.paymentType === 'اقساطی' && (!formDataPolicy.installmentsCount || formDataPolicy.installmentsCount <= 0)) || (formDataPolicy.paymentType === 'اقساطی' && !formDataPolicy.installmentType.trim()) || (formDataPolicy.installmentType === 'پیش پرداخت' && (!formDataPolicy.firstInstallmentAmount || formDataPolicy.firstInstallmentAmount.trim() === ''))) {
       toast.error("لطفا تمام فیلدهای مورد نیاز را پر کنید.");
       return;
     }
@@ -791,7 +791,9 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
       formData.append('payment_type', formDataPolicy.paymentType);
       formData.append('installment_count', formDataPolicy.installmentsCount.toString());
       formData.append('installment_type', formDataPolicy.installmentType);
-      formData.append('first_installment_amount', formDataPolicy.firstInstallmentAmount.replace(/,/g, ''));
+      if (formDataPolicy.firstInstallmentAmount && formDataPolicy.firstInstallmentAmount.trim() !== '') {
+        formData.append('first_installment_amount', formDataPolicy.firstInstallmentAmount.replace(/,/g, ''));
+      }
       formData.append('payment_id', formDataPolicy.payId);
       formData.append('payment_link', formDataPolicy.paymentLink);
       if (formDataPolicy.pdfFile) {
@@ -864,7 +866,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         payment_type: formDataPolicy.paymentType,
         installment_count: formDataPolicy.installmentsCount,
         installment_type: formDataPolicy.installmentType,
-        first_installment_amount: formDataPolicy.firstInstallmentAmount.replace(/,/g, ''),
+        first_installment_amount: formDataPolicy.firstInstallmentAmount && formDataPolicy.firstInstallmentAmount.trim() !== '' ? formDataPolicy.firstInstallmentAmount.replace(/,/g, '') : null,
         payment_id: formDataPolicy.payId,
         payment_link: formDataPolicy.paymentLink,
       }, {
@@ -2027,7 +2029,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                           htmlFor="policy-customerName"
                           className="text-right"
                         >
-                          نام مشتری
+                          نام مشتری <span className="text-red-500">*</span>
                         </Label>
                         <div className="col-span-3 relative">
                           <Input
@@ -2067,7 +2069,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                            htmlFor="policy-customerNationalCode"
                            className="text-right"
                          >
-                           کد ملی مشتری
+                           کد ملی مشتری <span className="text-red-500">*</span>
                          </Label>
                          <Input
                            id="policy-customerNationalCode"
@@ -2105,7 +2107,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                        </div>
                       <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="policy-type" className="text-right">
-                          نوع بیمه
+                          نوع بیمه <span className="text-red-500">*</span>
                         </Label>
                         <Select
                           name="policy-type"
@@ -2152,7 +2154,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                           htmlFor="policy-startDate"
                           className="text-right"
                         >
-                          تاریخ شروع
+                          تاریخ شروع <span className="text-red-500">*</span>
                         </Label>
                         <div className="col-span-3">
                           <ClientOnlyDatePicker
@@ -2188,7 +2190,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       </div>
                       <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="policy-premium" className="text-right">
-                          حق بیمه (ریال)
+                          حق بیمه (ریال) <span className="text-red-500">*</span>
                         </Label>
                         <PriceInput
                           value={formDataPolicy.premium}
@@ -2203,7 +2205,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       </div>
                       <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="policy-status" className="text-right">
-                          وضعیت بیمه‌نامه
+                          وضعیت بیمه‌نامه <span className="text-red-500">*</span>
                         </Label>
                         <Select
                           name="policy-status"
@@ -2227,7 +2229,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       </div>
                       <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="policy-paymentType" className="text-right">
-                          نوع پرداخت
+                          نوع پرداخت <span className="text-red-500">*</span>
                         </Label>
                         <Select
                           name="paymentType"
@@ -2250,7 +2252,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       </div>
                       <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="policy-installmentsCount" className="text-right">
-                          تعداد اقساط
+                          تعداد اقساط <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="policy-installmentsCount"
@@ -2271,7 +2273,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       </div>
                       <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="policy-installmentType" className="text-right">
-                          نوع قسط
+                          نوع قسط <span className="text-red-500">*</span>
                         </Label>
                         <Select
                           name="installmentType"
@@ -2296,7 +2298,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       {formDataPolicy.installmentType === "پیش پرداخت" && formDataPolicy.paymentType === "اقساطی" && (
                         <div className="grid grid-cols-4 items-center gap-4">
                           <Label htmlFor="policy-firstInstallmentAmount" className="text-right">
-                            مبلغ پیش پرداخت (ریال)
+                            مبلغ پیش پرداخت (ریال) <span className="text-red-500">*</span>
                           </Label>
                           <PriceInput
                             value={formDataPolicy.firstInstallmentAmount}

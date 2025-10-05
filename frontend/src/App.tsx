@@ -18,7 +18,7 @@ import { NotFound } from './components/NotFound';
 import { Blogs } from './components/Blogs';
 import { BlogDetail } from './components/BlogDetail';
 
-type UserType = 'customer' | 'admin' | null;
+type UserType = 'customer' | 'admin' | 'admin-2' | 'admin-3' | null;
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -42,7 +42,7 @@ function AppContent() {
     navigate(page);
   };
 
-  const handleLogin = (type: 'customer' | 'admin') => {
+  const handleLogin = (type: 'customer' | 'admin' | 'admin-2' | 'admin-3') => {
     setUserType(type);
     localStorage.setItem('userType', type);
     navigate(type === 'customer' ? '/customer-dashboard' : '/admin-dashboard');
@@ -103,7 +103,7 @@ function AppContent() {
         userType === 'customer' ? <CustomerDashboard onLogout={handleLogout} /> : <NotFound />
       } />
       <Route path="/admin-dashboard" element={
-        userType === 'admin' ? <AdminDashboard onLogout={handleLogout} /> : <NotFound />
+        userType && userType !== 'customer' ? <AdminDashboard onLogout={handleLogout} /> : <NotFound />
       } />
       <Route path="/contact" element={
         <div className="min-h-screen bg-white">

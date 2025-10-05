@@ -152,6 +152,17 @@ interface Customer {
   role?: string;
 }
 
+interface FormData {
+  name: string;
+  nationalCode: string;
+  insuranceCode: string;
+  phone: string;
+  email: string;
+  birthDate: string;
+  score: 'A' | 'B' | 'C' | 'D';
+  role: 'customer' | 'admin' | 'admin-2' | 'admin-3';
+}
+
 interface Policy {
   id: string;
   customerName: string;
@@ -191,6 +202,7 @@ interface CustomerAPI {
   score?: string;
   insurance_code?: string;
   created_at?: string;
+  role?: string;
 }
 
 interface PolicyAPI {
@@ -247,14 +259,15 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   });
 
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     name: "",
     nationalCode: "",
     insuranceCode: "",
     phone: "",
     email: "",
     birthDate: "",
-    score: "A" as 'A' | 'B' | 'C' | 'D',
+    score: "A",
+    role: "customer",
   });
   const [deleteCustomer, setDeleteCustomer] = useState<Customer | null>(null);
   const [showCustomerForm, setShowCustomerForm] = useState(false);
@@ -313,7 +326,21 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
     imageFile: null as File | null,
     category: "",
   });
-  const [activeTab, setActiveTab] = useState("customers");
+  const [activeTab, setActiveTab] = useState(() => {
+    const role = localStorage.getItem('role') || 'admin';
+    if (role === 'admin-3') return 'blogs';
+    if (role === 'admin-2') return 'installments';
+    return 'customers';
+  });
+
+  const userRole = localStorage.getItem('role') || 'admin';
+  const visibleTabs = userRole === 'admin' ? ['customers', 'policies', 'installments', 'blogs'] :
+    userRole === 'admin-2' ? ['installments', 'blogs'] :
+    userRole === 'admin-3' ? ['blogs'] :
+    ['customers', 'policies', 'installments', 'blogs'];
+  const cols = visibleTabs.length;
+  const tabIndex = visibleTabs.indexOf(activeTab);
+
   const [showAddBlogForm, setShowAddBlogForm] = useState(false);
 
   const token = localStorage.getItem('token');
@@ -373,6 +400,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         status: 'فعال', // Default
         score: (c.score as 'A' | 'B' | 'C' | 'D') || 'A',
         password: c.insurance_code,
+        role: c.role || 'customer',
       })));
     } catch (error) {
       console.error('Error fetching customers:', error);
@@ -533,8 +561,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
 
 
-  const tabIndex =
-    { customers: 0, policies: 1, installments: 2, blogs: 3 }[activeTab] || 0;
+  // tabIndex is now defined above
 
   const formatPrice = (price: string) => {
     if (!price) return "0 ریال";
@@ -557,7 +584,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   );
 
   const handleAddCustomer = async () => {
-    if (!formData.name.trim() || !formData.nationalCode.trim() || !formData.phone.trim() || !formData.birthDate.trim()) {
+    if (!formData.name.trim() || !formData.nationalCode.trim() || !formData.phone.trim()) {
       toast.error("لطفا تمام فیلدهای مورد نیاز را پر کنید.");
       return;
     }
@@ -569,7 +596,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         phone: formData.phone,
         birth_date: formData.birthDate,
         score: formData.score,
-        role: editingCustomer?.role || 'customer',
+        role: formData.role,
       }, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -597,11 +624,12 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         email: "",
         birthDate: "",
         score: "A",
+        role: "customer",
       });
       setShowCustomerForm(false);
     } catch (error) {
       console.error('Error:', error);
-      toast.error('خطا در افزودن مشتری');
+      toast.error('خطا در افزودن کاربر');
     }
   };
 
@@ -615,7 +643,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         phone: formData.phone,
         birth_date: formData.birthDate,
         score: formData.score,
-        role: 'customer',
+        role: formData.role,
       }, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -645,6 +673,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         email: "",
         birthDate: "",
         score: "A",
+        role: "customer",
       });
       setShowCustomerForm(false);
       setEditingCustomer(null);
@@ -666,7 +695,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
       setDeleteCustomer(null);
     } catch (error) {
       console.error('Error:', error);
-      toast.error('خطا در حذف مشتری');
+      toast.error('خطا در حذف کاربر');
     }
   };
 
@@ -680,6 +709,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
       email: customer.email,
       birthDate: customer.birthDate,
       score: customer.score,
+      role: (customer.role as 'customer' | 'admin' | 'admin-2' | 'admin-3') || 'customer',
     });
     setShowCustomerForm(true);
   };
@@ -1321,82 +1351,233 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {!statsLoaded ? (
-            Array.from({ length: 4 }).map((_, i) => (
-              <Card key={i}>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <Skeleton className="h-4 w-20 mb-2" />
-                      <Skeleton className="h-8 w-12 mb-1" />
-                      <Skeleton className="h-3 w-16" />
+        {userRole === 'admin-3' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
+            {!loadingBlogs ? (
+              <>
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600 mb-2">کل مقالات</p>
+                        <p className="text-3xl">{blogs.length}</p>
+                        <p className="text-sm text-green-600 mt-1">آمار به‌روز</p>
+                      </div>
+                      <FileText className="h-8 w-8 text-blue-600" />
                     </div>
-                    <Skeleton className="h-8 w-8 rounded" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <>
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600 mb-2">کل مشتریان</p>
-                      <p className="text-3xl">{stats.customersCount - 1}</p>
-                      <p className="text-sm text-green-600 mt-1">آمار به‌روز</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600 mb-2">امتیاز شما</p>
+                        {(() => {
+                          const currentUser = customers.find(c => c.nationalCode === localStorage.getItem('userId'));
+                          const score = currentUser?.score;
+                          const scoreText = score === 'A' ? 'عالی' : score === 'B' ? 'خوب' : score === 'C' ? 'متوسط' : 'ضعیف';
+                          const scoreColor = score === 'A' ? 'text-green-600' : score === 'B' ? 'text-blue-600' : score === 'C' ? 'text-orange-600' : 'text-red-600';
+                          return <p className={`text-3xl ${scoreColor}`}>{scoreText}</p>;
+                        })()}
+                        <p className="text-sm text-green-600 mt-1">امتیاز شخصی</p>
+                      </div>
+                      <Users className="h-8 w-8 text-blue-600" />
                     </div>
-                    <Users className="h-8 w-8 text-blue-600" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600 mb-2">
-                        بیمه‌نامه‌های فعال
-                      </p>
-                      <p className="text-3xl">{stats.policiesCount}</p>
-                      <p className="text-sm text-green-600 mt-1">آمار به‌روز</p>
+                  </CardContent>
+                </Card>
+              </>
+            ) : (
+              Array.from({ length: 2 }).map((_, i) => (
+                <Card key={i}>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <Skeleton className="h-4 w-20 mb-2" />
+                        <Skeleton className="h-8 w-12 mb-1" />
+                        <Skeleton className="h-3 w-16" />
+                      </div>
+                      <Skeleton className="h-8 w-8 rounded" />
                     </div>
-                    <FileText className="h-8 w-8 text-green-600" />
-                  </div>
-                </CardContent>
-              </Card>
-
-
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600 mb-2">اقساط معوق</p>
-                      <p className="text-3xl text-red-600">{stats.overdueInstallmentsCount}</p>
-                      <p className="text-sm text-red-600 mt-1">آمار به‌روز</p>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        ) : userRole === 'admin-2' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+            {!loading ? (
+              <>
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600 mb-2">کل مشتریان</p>
+                        <p className="text-3xl">{stats.customersCount}</p>
+                        <p className="text-sm text-green-600 mt-1">آمار به‌روز</p>
+                      </div>
+                      <Users className="h-8 w-8 text-blue-600" />
                     </div>
-                    <CreditCard className="h-8 w-8 text-red-600" />
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
 
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600 mb-2">بیمه های نزدیک به انقضا</p>
-                      <p className="text-3xl text-yellow-600">{stats.nearExpiryPoliciesCount}</p>
-                      <p className="text-sm text-yellow-600 mt-1">در ۳۰ روز آینده</p>
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600 mb-2">
+                          بیمه‌نامه‌های فعال
+                        </p>
+                        <p className="text-3xl">{stats.policiesCount}</p>
+                        <p className="text-sm text-green-600 mt-1">آمار به‌روز</p>
+                      </div>
+                      <FileText className="h-8 w-8 text-green-600" />
                     </div>
-                    <Calendar className="h-8 w-8 text-yellow-600" />
-                  </div>
-                </CardContent>
-              </Card>
-            </>
-          )}
-        </div>
+                  </CardContent>
+                </Card>
+
+
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600 mb-2">اقساط معوق</p>
+                        <p className="text-3xl text-red-600">{stats.overdueInstallmentsCount}</p>
+                        <p className="text-sm text-red-600 mt-1">آمار به‌روز</p>
+                      </div>
+                      <CreditCard className="h-8 w-8 text-red-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600 mb-2">بیمه های نزدیک به انقضا</p>
+                        <p className="text-3xl text-yellow-600">{stats.nearExpiryPoliciesCount}</p>
+                        <p className="text-sm text-yellow-600 mt-1">در ۳۰ روز آینده</p>
+                      </div>
+                      <Calendar className="h-8 w-8 text-yellow-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600 mb-2">امتیاز شما</p>
+                        {(() => {
+                          const currentUser = customers.find(c => c.nationalCode === localStorage.getItem('userId'));
+                          const score = currentUser?.score;
+                          const scoreText = score === 'A' ? 'عالی' : score === 'B' ? 'خوب' : score === 'C' ? 'متوسط' : 'ضعیف';
+                          const scoreColor = score === 'A' ? 'text-green-600' : score === 'B' ? 'text-blue-600' : score === 'C' ? 'text-orange-600' : 'text-red-600';
+                          return <p className={`text-3xl ${scoreColor}`}>{scoreText}</p>;
+                        })()}
+                        <p className="text-sm text-green-600 mt-1">امتیاز شخصی</p>
+                      </div>
+                      <Users className="h-8 w-8 text-blue-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            ) : (
+              Array.from({ length: 5 }).map((_, i) => (
+                <Card key={i}>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <Skeleton className="h-4 w-20 mb-2" />
+                        <Skeleton className="h-8 w-12 mb-1" />
+                        <Skeleton className="h-3 w-16" />
+                      </div>
+                      <Skeleton className="h-8 w-8 rounded" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {!statsLoaded ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <Card key={i}>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <Skeleton className="h-4 w-20 mb-2" />
+                        <Skeleton className="h-8 w-12 mb-1" />
+                        <Skeleton className="h-3 w-16" />
+                      </div>
+                      <Skeleton className="h-8 w-8 rounded" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <>
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600 mb-2">کل مشتریان</p>
+                        <p className="text-3xl">{customers.filter(c => (c.role || 'customer') === 'customer').length}</p>
+                        <p className="text-sm text-green-600 mt-1">آمار به‌روز</p>
+                      </div>
+                      <Users className="h-8 w-8 text-blue-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600 mb-2">
+                          بیمه‌نامه‌های فعال
+                        </p>
+                        <p className="text-3xl">{stats.policiesCount}</p>
+                        <p className="text-sm text-green-600 mt-1">آمار به‌روز</p>
+                      </div>
+                      <FileText className="h-8 w-8 text-green-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600 mb-2">اقساط معوق</p>
+                        <p className="text-3xl text-red-600">{stats.overdueInstallmentsCount}</p>
+                        <p className="text-sm text-red-600 mt-1">آمار به‌روز</p>
+                      </div>
+                      <CreditCard className="h-8 w-8 text-red-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600 mb-2">بیمه های نزدیک به انقضا</p>
+                        <p className="text-3xl text-yellow-600">{stats.nearExpiryPoliciesCount}</p>
+                        <p className="text-sm text-yellow-600 mt-1">در ۳۰ روز آینده</p>
+                      </div>
+                      <Calendar className="h-8 w-8 text-yellow-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
+          </div>
+        )}
 
         {/* Management Tabs */}
         <Tabs
@@ -1404,41 +1585,41 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
           onValueChange={setActiveTab}
           className="space-y-6"
         >
-          <TabsList className="relative grid w-full grid-cols-4 bg-gray-100 p-1 rounded-lg">
+          <TabsList className={`relative grid w-full ${cols === 1 ? 'grid-cols-1' : cols === 2 ? 'grid-cols-2' : cols === 3 ? 'grid-cols-3' : 'grid-cols-4'} bg-gray-100 p-1 rounded-lg`}>
             <motion.div
               className="absolute top-1 bottom-1 bg-white rounded-md shadow-sm"
-              style={{ width: "calc(25% - 4px)" }}
-              animate={{ left: `calc(${tabIndex} * 25% + 2px)` }}
+              style={{ width: `calc(${100/cols}% - 4px)` }}
+              animate={{ left: `calc(${tabIndex} * ${100/cols}% + 2px)` }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
             />
-            <TabsTrigger
+            {visibleTabs.includes('customers') && <TabsTrigger
               value="customers"
               className="relative z-10 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
             >
               {" "}
-              مشتریان
-            </TabsTrigger>
-            <TabsTrigger
+              کاربران
+            </TabsTrigger>}
+            {visibleTabs.includes('policies') && <TabsTrigger
               value="policies"
               className="relative z-10 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
             >
               {" "}
               بیمه‌نامه‌ها
-            </TabsTrigger>
-            <TabsTrigger
+            </TabsTrigger>}
+            {visibleTabs.includes('installments') && <TabsTrigger
               value="installments"
               className="relative z-10 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
             >
               {" "}
               اقساط
-            </TabsTrigger>
-            <TabsTrigger
+            </TabsTrigger>}
+            {visibleTabs.includes('blogs') && <TabsTrigger
               value="blogs"
               className="relative z-10 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
             >
               {" "}
               وبلاگ
-            </TabsTrigger>
+            </TabsTrigger>}
           </TabsList>
 
           {/* Customers Management */}
@@ -1447,7 +1628,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    {loading ? <Skeleton className="h-6 w-32" /> : <CardTitle>مدیریت مشتریان</CardTitle>}
+                    {loading ? <Skeleton className="h-6 w-32" /> : <CardTitle>مدیریت کاربران</CardTitle>}
                   </div>
                   <Button
                     onClick={() => {
@@ -1460,13 +1641,14 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         email: "",
                         birthDate: "",
                         score: "A",
+                        role: "customer",
                       });
                       setShowCustomerForm((prev) => !prev);
                     }}
                     variant={showCustomerForm ? "outline" : "default"}
                   >
                     <Plus className="h-4 w-4 ml-2" />
-                    افزودن مشتری
+                    افزودن کاربر
                   </Button>
                 </div>
               </CardHeader>
@@ -1484,7 +1666,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     <div className="grid gap-4 py-2">
                       <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="name" className="text-right">
-                          نام و نام خانوادگی
+                          نام و نام خانوادگی <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="name"
@@ -1499,7 +1681,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       </div>
                       <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="nationalCode" className="text-right">
-                          کد ملی
+                          کد ملی <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="nationalCode"
@@ -1536,7 +1718,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       </div>
                       <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="phone" className="text-right">
-                          شماره تماس
+                          شماره تماس <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="phone"
@@ -1586,11 +1768,33 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                           </SelectContent>
                         </Select>
                       </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="role" className="text-right">
+                          نقش
+                        </Label>
+                        <Select
+                          name="role"
+                          value={formData.role}
+                          onValueChange={(value: 'customer' | 'admin' | 'admin-2' | 'admin-3') =>
+                            setFormData({ ...formData, role: value })
+                          }
+                        >
+                          <SelectTrigger className="col-span-3">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="customer">مشتری</SelectItem>
+                            <SelectItem value="admin">ادمین</SelectItem>
+                            <SelectItem value="admin-2">ادمین درجه ۲</SelectItem>
+                            <SelectItem value="admin-3">ادمین درجه ۳</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                       
                     </div>
                     <div className="flex gap-2 mt-4 justify-end">
                       <Button onClick={editingCustomer ? handleEditCustomer : handleAddCustomer}>
-                        {editingCustomer ? "ذخیره تغییرات" : "ثبت مشتری"}
+                        {editingCustomer ? "ذخیره تغییرات" : "ثبت کاربر"}
                       </Button>
                       <Button
                         variant="outline"
@@ -1603,6 +1807,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                             email: "",
                             birthDate: "",
                             score: "A",
+                            role: "customer",
                           });
                           setShowCustomerForm(false);
                         }}
@@ -1617,7 +1822,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   <div className="relative">
                     <Search className="absolute right-3 top-3 h-4 w-4 text-gray-400" />
                     <Input
-                      placeholder="جستجو در مشتریان..."
+                      placeholder="جستجو در کاربران..."
                       dir="rtl"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
@@ -1632,6 +1837,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       <TableHead className="text-left pl-8">عملیات</TableHead>
                       <TableHead className="text-right">وضعیت</TableHead>
                       <TableHead className="text-right">امتیاز</TableHead>
+                      <TableHead className="text-right">نقش</TableHead>
                       <TableHead className="text-right">بیمه‌نامه‌های فعال</TableHead>
 
                       <TableHead className="text-right">شماره تماس</TableHead>
@@ -1647,11 +1853,39 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                           <TableCell><Skeleton className="h-6 w-12" /></TableCell>
                           <TableCell><Skeleton className="h-6 w-8" /></TableCell>
                           <TableCell><Skeleton className="h-6 w-8" /></TableCell>
+                          <TableCell><Skeleton className="h-6 w-8" /></TableCell>
                           <TableCell><Skeleton className="h-6 w-20" /></TableCell>
                           <TableCell><Skeleton className="h-6 w-16" /></TableCell>
                           <TableCell><Skeleton className="h-6 w-24" /></TableCell>
                         </TableRow>
                       ))
+                    ) : filteredCustomers.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center h-24">
+                          <div className="flex flex-col items-center justify-center space-y-2">
+                            <p className="text-gray-500">هیچ مشتری‌ای یافت نشد.</p>
+                            <Button
+                              onClick={() => {
+                                setEditingCustomer(null);
+                                setFormData({
+                                  name: "",
+                                  nationalCode: "",
+                                  insuranceCode: "",
+                                  phone: "",
+                                  email: "",
+                                  birthDate: "",
+                                  score: "A",
+                                  role: "customer",
+                                });
+                                setShowCustomerForm(true);
+                              }}
+                              variant="outline"
+                            >
+                              افزودن مشتری جدید
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
                     ) : (
                       filteredCustomers.map((customer) => (
                         <TableRow key={customer.id}>
@@ -1677,9 +1911,9 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                   <AlertDialogHeader>
-                                    <AlertDialogTitle>حذف مشتری</AlertDialogTitle>
+                                    <AlertDialogTitle>حذف کاربر</AlertDialogTitle>
                                     <AlertDialogDescription>
-                                      آیا مطمئن هستید که می‌خواهید این مشتری را
+                                      آیا مطمئن هستید که می‌خواهید این کاربر را
                                       حذف کنید؟ این عمل قابل بازگشت نیست.
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
@@ -1698,6 +1932,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                           </TableCell>
                           <TableCell>{getStatusBadge(customer.status)}</TableCell>
                           <TableCell>{customer.score}</TableCell>
+                          <TableCell>{customer.role || 'customer'}</TableCell>
                           <TableCell>{customer.activePolicies}</TableCell>
 
                           <TableCell>{customer.phone}</TableCell>
@@ -2766,56 +3001,78 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredBlogs.map((blog) => (
-                      <TableRow key={blog.id}>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => openEditBlogDialog(blog)}
-                            >
-                              <Edit className="h-4 w-4" />
+                    {loadingBlogs ? (
+                      Array.from({ length: 5 }).map((_, i) => (
+                        <TableRow key={i}>
+                          <TableCell><Skeleton className="h-8 w-16" /></TableCell>
+                          <TableCell><Skeleton className="h-6 w-12" /></TableCell>
+                          <TableCell><Skeleton className="h-6 w-8" /></TableCell>
+                          <TableCell><Skeleton className="h-6 w-24" /></TableCell>
+                        </TableRow>
+                      ))
+                    ) : filteredBlogs.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center h-24">
+                          <div className="flex flex-col items-center justify-center space-y-2">
+                            <p className="text-gray-500">هیچ مقاله‌ای یافت نشد.</p>
+                            <Button onClick={() => setShowAddBlogForm(true)} variant="outline">
+                              افزودن مقاله جدید
                             </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-red-600 hover:text-red-700"
-                                  onClick={() => setDeleteBlogId(blog.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>حذف مقاله</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    آیا مطمئن هستید که می‌خواهید این مقاله را
-                                    حذف کنید؟ این عمل قابل بازگشت نیست.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>لغو</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={handleDeleteBlog}
-                                    className="bg-red-600 hover:bg-red-700"
-                                  >
-                                    حذف
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
                           </div>
                         </TableCell>
-                        <TableCell>{blog.date}</TableCell>
-                        <TableCell>{blog.category}</TableCell>
-                        <TableCell className="max-w-xs truncate">
-                          {blog.title}
-                        </TableCell>
                       </TableRow>
-                    ))}
+                    ) : (
+                      filteredBlogs.map((blog) => (
+                        <TableRow key={blog.id}>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openEditBlogDialog(blog)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-red-600 hover:text-red-700"
+                                    onClick={() => setDeleteBlogId(blog.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>حذف مقاله</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      آیا مطمئن هستید که می‌خواهید این مقاله را
+                                      حذف کنید؟ این عمل قابل بازگشت نیست.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>لغو</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={handleDeleteBlog}
+                                      className="bg-red-600 hover:bg-red-700"
+                                    >
+                                      حذف
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </TableCell>
+                          <TableCell>{blog.date}</TableCell>
+                          <TableCell>{blog.category}</TableCell>
+                          <TableCell className="max-w-xs truncate">
+                            {blog.title}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>

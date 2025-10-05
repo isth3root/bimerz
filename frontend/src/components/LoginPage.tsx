@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import api from '../utils/api';
 
 interface LoginPageProps {
-  onLogin: (userType: 'customer' | 'admin') => void;
+  onLogin: (userType: 'customer' | 'admin' | 'admin-2' | 'admin-3') => void;
   onNavigate: (page: string) => void;
 }
 

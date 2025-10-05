@@ -3,9 +3,9 @@ import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-ro
 import { motion } from 'framer-motion';
 import { Toaster } from "sonner";
 import { Header } from './components/Header';
-import { HeroSlider } from './components/HeroSlider';
 import { ServicesSection } from './components/ServicesSection';
 import { BlogSection } from './components/BlogSection';
+import RulesSection from './components/RulesSection';
 import { FAQSection } from './components/FAQSection';
 import { Footer } from './components/Footer';
 import { LoginPage } from './components/LoginPage';
@@ -66,10 +66,19 @@ function AppContent() {
           <Header onNavigate={handleNavigate} currentPage={currentPage} />
           <motion.div
             initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            viewport={{ once: true }}
           >
-            <HeroSlider onNavigate={handleNavigate} />
+            <BlogSection />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            viewport={{ once: true }}
+          >
+            <RulesSection />
           </motion.div>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -78,14 +87,6 @@ function AppContent() {
             viewport={{ once: true }}
           >
             <ServicesSection onNavigate={handleNavigate} />
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            viewport={{ once: true }}
-          >
-            <BlogSection />
           </motion.div>
           <motion.div
             initial={{ opacity: 0, y: 30 }}

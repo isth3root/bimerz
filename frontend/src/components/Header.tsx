@@ -59,6 +59,12 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
               وبلاگ
             </button>
             <button
+              onClick={() => onNavigate('rules')}
+              className={`cursor-pointer transition-colors ${currentPage === 'rules' ? 'text-green-600 font-semibold' : 'text-gray-700 hover:text-green-600'}`}
+            >
+              قوانین بیمه
+            </button>
+            <button
               onClick={() => onNavigate('about')}
               className={`cursor-pointer transition-colors ${currentPage === 'about' ? 'text-green-600 font-semibold' : 'text-gray-700 hover:text-green-600'}`}
             >
@@ -97,6 +103,12 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
                   className={`w-full text-center py-3 px-4 rounded-lg transition-colors ${currentPage === 'blogs' ? 'bg-green-100 text-green-600 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
                 >
                   وبلاگ
+                </button>
+                <button
+                  onClick={() => { onNavigate('rules'); setIsOpen(false); }}
+                  className={`w-full text-center py-3 px-4 rounded-lg transition-colors ${currentPage === 'rules' ? 'bg-green-100 text-green-600 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
+                >
+                  قوانین بیمه
                 </button>
                 <button
                   onClick={() => { onNavigate('about'); setIsOpen(false); }}

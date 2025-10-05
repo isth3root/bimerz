@@ -37,7 +37,14 @@ function AppContent() {
   const location = useLocation();
 
   const handleNavigate = (page: string) => {
-    navigate(page);
+    if (page === 'rules' && currentPage === 'home') {
+      const element = document.getElementById('rules-section');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      navigate(page);
+    }
   };
 
   const handleLogin = (type: 'customer' | 'admin' | 'admin-2' | 'admin-3') => {
@@ -71,6 +78,7 @@ function AppContent() {
             <BlogSection />
           </motion.div>
           <motion.div
+            id="rules-section"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}

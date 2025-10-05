@@ -48,6 +48,16 @@ export function useBlogs() {
     };
 
     fetchBlogs();
+
+    const handleFocus = () => {
+      fetchBlogs();
+    };
+
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   const addBlog = (blog: Omit<Blog, 'id'>) => {

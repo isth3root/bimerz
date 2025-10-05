@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
-import { Calendar, User, ArrowLeft } from "lucide-react";
+import { Calendar, ArrowLeft } from "lucide-react";
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { useBlogs } from '../hooks/useBlogs';
 import { useNavigate } from 'react-router-dom';
@@ -24,7 +24,7 @@ export function BlogSection() {
             <Card key={post.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300 border-0 shadow-md">
               <div className="relative h-48 overflow-hidden">
                 <ImageWithFallback
-                  src={post.imageUrl || ''}
+                  src={post.image_path ? `${import.meta.env.VITE_DEV_URI}${post.image_path}` : ''}
                   alt={post.title}
                   className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                 />
@@ -34,28 +34,24 @@ export function BlogSection() {
                   </span>
                 </div>
               </div>
-              
+
               <CardHeader>
                 <CardTitle className="text-lg line-clamp-2 hover:text-green-600 transition-colors">
                   {post.title}
                 </CardTitle>
                 <CardDescription className="text-sm line-clamp-3">
-                  {post.excerpt}
+                  {post.summary}
                 </CardDescription>
               </CardHeader>
-              
+
               <CardContent>
                 <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    <span>{post.author}</span>
-                  </div>
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
                     <span>{post.date}</span>
                   </div>
                 </div>
-                
+
                 <Button variant="ghost" className="w-full group" onClick={() => navigate(`/blogs/${post.id}`)}>
                   ادامه مطلب
                   <ArrowLeft className="h-4 w-4 mr-2 group-hover:translate-x-1 transition-transform" />

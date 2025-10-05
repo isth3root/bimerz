@@ -39,9 +39,14 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
       localStorage.setItem('role', data.role);
       toast.success('ورود موفق');
       onLogin(data.role);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Login error:', error);
-      toast.error('اطلاعات ورود نامعتبر است');
+      const axiosError = error as { response?: { status: number } };
+      if (axiosError.response?.status === 403) {
+        toast.error('حساب کاربری شما غیرفعال است. لطفا با ادمین تماس بگیرید.');
+      } else {
+        toast.error('اطلاعات ورود نامعتبر است');
+      }
     } finally {
       setIsLoading(false);
     }

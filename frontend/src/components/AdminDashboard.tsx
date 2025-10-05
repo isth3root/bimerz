@@ -203,6 +203,7 @@ interface CustomerAPI {
   insurance_code?: string;
   created_at?: string;
   role?: string;
+  status?: string;
 }
 
 interface PolicyAPI {
@@ -270,6 +271,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
     role: "customer",
   });
   const [deleteCustomer, setDeleteCustomer] = useState<Customer | null>(null);
+  const [toggleCustomer, setToggleCustomer] = useState<Customer | null>(null);
   const [showCustomerForm, setShowCustomerForm] = useState(false);
 
   const [policySearchQuery, setPolicySearchQuery] = useState("");
@@ -369,128 +371,127 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
       }
     };
 
+    const fetchCustomers = async () => {
+      try {
+        const response = await api.get('/admin/customers', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = response.data;
+        if (!Array.isArray(data)) {
+          console.error('Expected array for customers data');
+          return;
+        }
+        setCustomers(data.map((c: CustomerAPI) => ({
+          id: c.id ? c.id.toString() : '',
+          name: c.full_name,
+          nationalCode: c.national_code,
+          phone: c.phone,
+          email: '',
+          birthDate: c.birth_date || '',
+          joinDate: c.created_at ? new Date(c.created_at).toLocaleDateString('fa-IR') : '',
+          activePolicies: 0, // Calculate or fetch separately
+          status: c.status || 'فعال',
+          score: (c.score as 'A' | 'B' | 'C' | 'D') || 'A',
+          password: c.insurance_code,
+          role: c.role || 'customer',
+        })));
+      } catch (error) {
+        console.error('Error fetching customers:', error);
+        if (error instanceof Error && error.message.includes('401')) {
+          localStorage.removeItem('token');
+          onLogout();
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchPolicies = async () => {
+      try {
+        const response = await api.get('/admin/policies', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = response.data;
+        if (!Array.isArray(data)) {
+          console.error('Expected array for policies data');
+          return;
+        }
+        setPolicies(data.map((p: PolicyAPI) => ({
+          id: p.id.toString(),
+          customerName: p.customer ? p.customer.full_name : 'Unknown',
+          customerNationalCode: p.customer ? p.customer.national_code : '',
+          policyNumber: p.policy_number,
+          type: p.insurance_type,
+          vehicle: p.details,
+          startDate: p.start_date || '',
+          endDate: p.end_date || '',
+          premium: p.premium.toString(),
+          status: p.status,
+          paymentType: p.payment_type,
+          payId: p.payment_id,
+          paymentLink: p.payment_link,
+          installmentsCount: p.installment_count,
+          pdfFile: null,
+        })));
+        
+        // Update customers with active policies count
+        setCustomers(prevCustomers =>
+          prevCustomers.map(customer => ({
+            ...customer,
+            activePolicies: data.filter((p: PolicyAPI) => p.customer && p.customer.national_code === customer.nationalCode).length,
+          }))
+        );
+
+        // Fetch stats
+        const [
+          customersCountData,
+          policiesCountData,
+          overdueData,
+          nearExpiryData,
+          nearExpiryInstallmentsData,
+        ] = await Promise.all([
+          api.get('/admin/customers/count', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data).catch(() => 0),
+          api.get('/count', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data).catch(() => 0),
+          api.get('/installments/overdue/count', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data).catch(() => 0),
+          api.get('/admin/policies/near-expiry/count', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data).catch(() => 0),
+          api.get('/installments/near-expiry/count', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data).catch(() => 0),
+        ]);
+
+        const customersCount = typeof customersCountData === 'object' && customersCountData.count !== undefined ? customersCountData.count : customersCountData;
+        const policiesCount = typeof policiesCountData === 'object' && policiesCountData.count !== undefined ? policiesCountData.count : policiesCountData;
+        const overdueInstallmentsCount = typeof overdueData === 'object' && overdueData.count !== undefined ? overdueData.count : overdueData;
+        const nearExpiryPoliciesCount = typeof nearExpiryData === 'object' && nearExpiryData.count !== undefined ? nearExpiryData.count : nearExpiryData;
+        const nearExpiryInstallmentsCount = typeof nearExpiryInstallmentsData === 'object' && nearExpiryInstallmentsData.count !== undefined ? nearExpiryInstallmentsData.count : nearExpiryInstallmentsData;
+
+        setStats({
+          customersCount,
+          policiesCount,
+          overdueInstallmentsCount,
+          nearExpiryPoliciesCount,
+          nearExpiryInstallmentsCount,
+        });
+        setStatsLoaded(true);
+        setLoadingPolicies(false);
+      } catch (error) {
+        console.error('Error fetching policies:', error);
+        if (error instanceof Error && error.message.includes('401')) {
+          localStorage.removeItem('token');
+          onLogout();
+        }
+      }
+    };
+
     if (!token) {
       console.error("token not found");
       onLogout();
       return;
     }
-
-  const fetchCustomers = async () => {
-    try {
-      const response = await api.get('/admin/customers', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = response.data;
-      if (!Array.isArray(data)) {
-        console.error('Expected array for customers data');
-        return;
-      }
-      setCustomers(data.map((c: CustomerAPI) => ({
-        id: c.id ? c.id.toString() : '',
-        name: c.full_name,
-        nationalCode: c.national_code,
-        phone: c.phone,
-        email: '',
-        birthDate: c.birth_date || '',
-        joinDate: c.created_at ? new Date(c.created_at).toLocaleDateString('fa-IR') : '',
-        activePolicies: 0, // Calculate or fetch separately
-        status: 'فعال', // Default
-        score: (c.score as 'A' | 'B' | 'C' | 'D') || 'A',
-        password: c.insurance_code,
-        role: c.role || 'customer',
-      })));
-    } catch (error) {
-      console.error('Error fetching customers:', error);
-      if (error instanceof Error && error.message.includes('401')) {
-        localStorage.removeItem('token');
-        onLogout();
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-    const fetchPolicies = async () => {
-    try {
-      const response = await api.get('/admin/policies', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = response.data;
-      if (!Array.isArray(data)) {
-        console.error('Expected array for policies data');
-        return;
-      }
-      setPolicies(data.map((p: PolicyAPI) => ({
-        id: p.id.toString(),
-        customerName: p.customer ? p.customer.full_name : 'Unknown',
-        customerNationalCode: p.customer ? p.customer.national_code : '',
-        policyNumber: p.policy_number,
-        type: p.insurance_type,
-        vehicle: p.details,
-        startDate: p.start_date || '',
-        endDate: p.end_date || '',
-        premium: p.premium.toString(),
-        status: p.status,
-        paymentType: p.payment_type,
-        payId: p.payment_id,
-        paymentLink: p.payment_link,
-        installmentsCount: p.installment_count,
-        pdfFile: null,
-      })));
-      
-      // Update customers with active policies count
-      setCustomers(prevCustomers =>
-        prevCustomers.map(customer => ({
-          ...customer,
-          activePolicies: data.filter((p: PolicyAPI) => p.customer && p.customer.national_code === customer.nationalCode).length,
-        }))
-      );
-
-
-        // Fetch stats
-      const [
-        customersCountData,
-        policiesCountData,
-        overdueData,
-        nearExpiryData,
-        nearExpiryInstallmentsData,
-      ] = await Promise.all([
-        api.get('/admin/customers/count', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data).catch(() => 0),
-        api.get('/count', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data).catch(() => 0),
-        api.get('/installments/overdue/count', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data).catch(() => 0),
-        api.get('/admin/policies/near-expiry/count', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data).catch(() => 0),
-        api.get('/installments/near-expiry/count', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data).catch(() => 0),
-      ]);
-
-      const customersCount = typeof customersCountData === 'object' && customersCountData.count !== undefined ? customersCountData.count : customersCountData;
-      const policiesCount = typeof policiesCountData === 'object' && policiesCountData.count !== undefined ? policiesCountData.count : policiesCountData;
-      const overdueInstallmentsCount = typeof overdueData === 'object' && overdueData.count !== undefined ? overdueData.count : overdueData;
-      const nearExpiryPoliciesCount = typeof nearExpiryData === 'object' && nearExpiryData.count !== undefined ? nearExpiryData.count : nearExpiryData;
-      const nearExpiryInstallmentsCount = typeof nearExpiryInstallmentsData === 'object' && nearExpiryInstallmentsData.count !== undefined ? nearExpiryInstallmentsData.count : nearExpiryInstallmentsData;
-
-      setStats({
-        customersCount,
-        policiesCount,
-        overdueInstallmentsCount,
-        nearExpiryPoliciesCount,
-        nearExpiryInstallmentsCount,
-      });
-      setStatsLoaded(true);
-      setLoadingPolicies(false);
-    } catch (error) {
-      console.error('Error fetching policies:', error);
-      if (error instanceof Error && error.message.includes('401')) {
-        localStorage.removeItem('token');
-        onLogout();
-      }
-    }
-  };
 
     if (token) {
       fetchCustomers();
@@ -559,17 +560,12 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
     }
   }, [formDataPolicy.startDate]);
 
-
-
-  // tabIndex is now defined above
-
   const formatPrice = (price: string) => {
     if (!price) return "0 ریال";
     const integerPart = String(price).split('.')[0];
     const formatted = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     return `${formatted} ریال`;
   };
-
 
   const filteredCustomers = customers.filter(
     (customer) =>
@@ -699,6 +695,26 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
     }
   };
 
+  const handleToggleStatus = async () => {
+    if (!toggleCustomer) return;
+    try {
+      const newStatus = toggleCustomer.status === 'فعال' ? 'غیرفعال' : 'فعال';
+      await api.put(`/admin/customers/${toggleCustomer.id}`, {
+        status: newStatus,
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setCustomers(customers.map(c => c.id === toggleCustomer.id ? { ...c, status: newStatus } : c));
+      toast.success('وضعیت کاربر با موفقیت تغییر یافت');
+      setToggleCustomer(null);
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('خطا در تغییر وضعیت کاربر');
+    }
+  };
+
   const openEditDialog = (customer: Customer) => {
     setEditingCustomer(customer);
     setFormData({
@@ -745,8 +761,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
     }
     try {
       const formData = new FormData();
-      formData.append('customer_id', formDataPolicy.customerNationalCode); // Assuming nationalCode is the id, but wait, customer_id is int, nationalCode is string.
-      // Need to find customer by nationalCode to get id.
+      // Find customer by nationalCode to get id.
       const customer = customers.find(c => c.nationalCode === formDataPolicy.customerNationalCode);
       if (!customer) {
         toast.error("مشتری یافت نشد.");
@@ -756,6 +771,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         toast.error("شناسه مشتری نامعتبر.");
         return;
       }
+      formData.append('customer_id', customer.id);
       formData.append('customer_national_code', formDataPolicy.customerNationalCode);
       formData.append('policy_number', formDataPolicy.policyNumber);
       formData.append('insurance_type', formDataPolicy.type);
@@ -1033,21 +1049,6 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
     }
   };
 
-  // const handleStatusChange = async (id: string, status: string) => {
-  //   try {
-  //     await api.put(`/installments/${id}`, { status }, {
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //     });
-  //     setInstallments(installments.map(i => i.id === id ? { ...i, status } : i));
-  //     toast.success("وضعیت قسط بروزرسانی شد.");
-  //   } catch (error) {
-  //     console.error(error);
-  //     toast.error("خطا در بروزرسانی وضعیت");
-  //   }
-  // };
-
   const openEditInstallmentDialog = (installment: Installment) => {
     setEditingInstallment(installment);
     setFormDataInstallment({
@@ -1296,7 +1297,6 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
     }
   };
 
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -1436,8 +1436,6 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   </CardContent>
                 </Card>
 
-
-
                 <Card>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
@@ -1546,8 +1544,6 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     </div>
                   </CardContent>
                 </Card>
-
-
 
                 <Card>
                   <CardContent className="p-6">
@@ -1790,7 +1786,6 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                           </SelectContent>
                         </Select>
                       </div>
-                      
                     </div>
                     <div className="flex gap-2 mt-4 justify-end">
                       <Button onClick={editingCustomer ? handleEditCustomer : handleAddCustomer}>
@@ -1839,7 +1834,6 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       <TableHead className="text-right">امتیاز</TableHead>
                       <TableHead className="text-right">نقش</TableHead>
                       <TableHead className="text-right">بیمه‌نامه‌های فعال</TableHead>
-
                       <TableHead className="text-right">شماره تماس</TableHead>
                       <TableHead className="text-right">کد ملی</TableHead>
                       <TableHead className="text-right">نام و نام خانوادگی</TableHead>
@@ -1930,11 +1924,17 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                               </AlertDialog>
                             </div>
                           </TableCell>
-                          <TableCell>{getStatusBadge(customer.status)}</TableCell>
+                          <TableCell>
+                            <button
+                              onClick={() => setToggleCustomer(customer)}
+                              className="cursor-pointer"
+                            >
+                              {getStatusBadge(customer.status)}
+                            </button>
+                          </TableCell>
                           <TableCell>{customer.score}</TableCell>
                           <TableCell>{customer.role || 'customer'}</TableCell>
                           <TableCell>{customer.activePolicies}</TableCell>
-
                           <TableCell>{customer.phone}</TableCell>
                           <TableCell>{customer.nationalCode}</TableCell>
                           <TableCell>{customer.name}</TableCell>
@@ -1944,9 +1944,26 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   </TableBody>
                 </Table>
               </CardContent>
-
             </Card>
           </TabsContent>
+
+          {/* Toggle Status Modal */}
+          <AlertDialog open={!!toggleCustomer} onOpenChange={() => setToggleCustomer(null)}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>تغییر وضعیت کاربر</AlertDialogTitle>
+                <AlertDialogDescription>
+                  آیا مطمئن هستید که می‌خواهید وضعیت {toggleCustomer?.name} را به {toggleCustomer?.status === 'فعال' ? 'غیرفعال' : 'فعال'} تغییر دهید؟
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>لغو</AlertDialogCancel>
+                <AlertDialogAction onClick={handleToggleStatus}>
+                  تایید
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
 
           {/* Policies Management */}
           <TabsContent value="policies">
@@ -2416,8 +2433,6 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   </TableBody>
                 </Table>
               </CardContent>
-
-              {/* Edit Policy Dialog removed */}
             </Card>
           </TabsContent>
 
@@ -2811,8 +2826,6 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   </TableBody>
                 </Table>
               </CardContent>
-
-              {/* Edit Installment Dialog removed */}
             </Card>
           </TabsContent>
 
@@ -3076,12 +3089,9 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                   </TableBody>
                 </Table>
               </CardContent>
-
-              {/* Edit Blog Dialog removed */}
             </Card>
           </TabsContent>
         </Tabs>
-
       </div>
     </div>
   );

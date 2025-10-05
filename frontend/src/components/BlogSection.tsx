@@ -13,10 +13,6 @@ export function BlogSection() {
     <section className="py-16 bg-white">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-3xl mb-4">آخرین مطالب وبلاگ</h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            مطالب مفید و آموزشی در زمینه بیمه برای آگاهی بیشتر شما
-          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

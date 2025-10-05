@@ -128,15 +128,15 @@ const RulesSection: React.FC = () => {
                 return (
                   <Card
                     key={ruleIndex}
-                    className="absolute flex w-72 h-72 sm:w-80 sm:h-80 md:w-96 md:h-80 lg:w-[28rem] lg:h-96 xl:w-[32rem] xl:h-[28rem] transition-all duration-700 ease-out shadow-2xl border border-white/20 bg-white hover:shadow-3xl"
+                    className="absolute flex justify-center w-72 h-96 sm:w-80 sm:h-96 md:w-96 md:h-96 lg:w-[28rem] lg:h-96 xl:w-[32rem] xl:h-[28rem] transition-all duration-700 ease-out shadow-2xl border border-white/20 bg-white hover:shadow-3xl"
                     style={getCardStyle(pos)}
                   >
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-center text-black leading-tight">
+                      <CardTitle className="text-xl sm:text-base md:text-lg lg:text-xl xl:text-2xl font-bold text-center text-black leading-tight">
                         {rule.title}
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="pt-0">
+                    <CardContent className="pt-0 pb-6">
                       <p className="text-lg sm:text-base md:text-lg lg:text-xl xl:text-2xl text-gray-700 text-center leading-relaxed px-2">
                         {rule.description}
                       </p>
@@ -157,14 +157,14 @@ const RulesSection: React.FC = () => {
           <div className="flex justify-center gap-4 mt-8 lg:hidden">
             <Button
               onClick={next}
-              className="bg-green-500 text-white shadow-lg"
+              className="bg-white text-black shadow-lg"
               size="icon"
             >
               <ChevronRight className="h-6 w-6" />
             </Button>
             <Button
               onClick={prev}
-              className="bg-green-500 text-white shadow-lg"
+              className="bg-white text-black shadow-lg"
               size="icon"
             >
               <ChevronLeft className="h-6 w-6" />

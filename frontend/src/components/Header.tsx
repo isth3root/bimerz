@@ -16,16 +16,16 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
       {/* Top bar */}
       <div className="bg-gradient-to-br from-teal-400 to-green-400 py-2">
         <div className="container mx-auto px-4 flex justify-between items-center flex-row-reverse">
-          <div className="text-sm text-gray-700 font-bold">
+          <div className="text-sm text-black font-bold">
             نمایندگی رئیس زاده
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => onNavigate('login')}
-            className="text-green-600 hover:text-green-700 cursor-pointer"
+            className="text-black cursor-pointer font-bold"
           >
-            <User className="h-4 w-4 mr-2" />
+            <User className="h-4 w-4 mr-2 font-bold text-black" />
             ورود به سامانه
           </Button>
         </div>

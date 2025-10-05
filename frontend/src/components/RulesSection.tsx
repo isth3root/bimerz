@@ -48,6 +48,7 @@ const rules = [
 
 const RulesSection: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   const next = () => {
     setCurrentIndex((prev) => (prev + 1) % rules.length);
@@ -55,6 +56,24 @@ const RulesSection: React.FC = () => {
 
   const prev = () => {
     setCurrentIndex((prev) => (prev - 1 + rules.length) % rules.length);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX - touchEndX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) {
+        next();
+      } else {
+        prev();
+      }
+    }
+    setTouchStartX(null);
   };
 
   const getCardStyle = (position: number) => {
@@ -102,14 +121,14 @@ const RulesSection: React.FC = () => {
             <ChevronLeft className="h-6 w-6 text-blue-600" />
           </Button>
           <div className="relative flex items-center justify-center h-96 lg:h-[28rem] xl:h-[36rem] overflow-hidden" style={{ perspective: '1200px' }}>
-            <div className="relative w-full max-w-6xl lg:max-w-7xl h-full flex items-center justify-center">
+            <div className="relative w-full max-w-6xl lg:max-w-7xl h-full flex items-center justify-center" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
               {[0, 1, 2, 3].map((pos) => {
                 const ruleIndex = (currentIndex + pos) % rules.length;
                 const rule = rules[ruleIndex];
                 return (
                   <Card
                     key={ruleIndex}
-                    className="absolute w-72 h-56 sm:w-80 sm:h-64 md:w-96 md:h-72 lg:w-[28rem] lg:h-80 xl:w-[32rem] xl:h-96 transition-all duration-700 ease-out shadow-2xl border border-white/20 bg-white/10 backdrop-blur-lg hover:shadow-3xl"
+                    className="absolute flex w-72 h-72 sm:w-80 sm:h-80 md:w-96 md:h-80 lg:w-[28rem] lg:h-96 xl:w-[32rem] xl:h-[28rem] transition-all duration-700 ease-out shadow-2xl border border-white/20 bg-white hover:shadow-3xl"
                     style={getCardStyle(pos)}
                   >
                     <CardHeader className="pb-2">
@@ -118,7 +137,7 @@ const RulesSection: React.FC = () => {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-0">
-                      <p className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl text-gray-700 text-center leading-relaxed px-2">
+                      <p className="text-lg sm:text-base md:text-lg lg:text-xl xl:text-2xl text-gray-700 text-center leading-relaxed px-2">
                         {rule.description}
                       </p>
                     </CardContent>
@@ -138,14 +157,14 @@ const RulesSection: React.FC = () => {
           <div className="flex justify-center gap-4 mt-8 lg:hidden">
             <Button
               onClick={next}
-              className="bg-green-600 hover:bg-green-700 text-white shadow-lg"
+              className="bg-green-500 text-white shadow-lg"
               size="icon"
             >
               <ChevronRight className="h-6 w-6" />
             </Button>
             <Button
               onClick={prev}
-              className="bg-green-600 hover:bg-green-700 text-white shadow-lg"
+              className="bg-green-500 text-white shadow-lg"
               size="icon"
             >
               <ChevronLeft className="h-6 w-6" />

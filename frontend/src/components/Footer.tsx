@@ -3,7 +3,7 @@ import { Phone, MapPin } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="bg-gray-900 text-white">
+    <footer className="bg-gradient-to-br from-green-400 to-emerald-500 text-black">
       {/* Main footer content */}
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -15,10 +15,10 @@ export function Footer() {
               </div>
               <div>
                 <h3 className="text-xl">بیمه البرز</h3>
-                <p className="text-sm text-gray-400">همراه شما در همه مراحل زندگی</p>
+                <p className="text-sm text-black">همراه شما در همه مراحل زندگی</p>
               </div>
             </div>
-            <p className="text-gray-400 leading-relaxed mb-6">
+            <p className="text-black leading-relaxed mb-6">
               بیش از ۲۰ سال تجربه در ارائه خدمات بیمه‌ای با بالاترین کیفیت و اعتماد مشتریان
             </p>
           </div>
@@ -29,12 +29,12 @@ export function Footer() {
             <h4 className="text-lg mb-6">تماس با ما</h4>
             <ul className="space-y-4">
               <li className="flex items-center gap-3">
-                <Phone className="h-5 w-5 text-green-400" />
-                <span className="text-gray-400">09385540717</span>
+                <Phone className="h-5 w-5 text-black" />
+                <span className="text-black">09385540717</span>
               </li>
               <li className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-green-400 mt-1" />
-                <span className="text-gray-400">اهواز امانیه خیابان سقراط شرقی مجتمع گلاریس طبقه ۳ واحد ۱۱</span>
+                <MapPin className="h-5 w-5 text-black mt-1" />
+                <span className="text-black">اهواز امانیه خیابان سقراط شرقی مجتمع گلاریس طبقه ۳ واحد ۱۱</span>
               </li>
             </ul>
           </div>
@@ -51,18 +51,18 @@ export function Footer() {
                 allowFullScreen
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                className="rounded"
+                className="rounded-3xl"
               ></iframe>
             </div>
           </div>
         </div>
       </div>
 
-      <Separator className="bg-gray-800" />
+      <Separator className="bg-green-500" />
 
       {/* Copyright */}
       <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-col md:flex-row justify-center items-center text-sm text-gray-400">
+        <div className="flex flex-col md:flex-row justify-center items-center text-sm text-black">
           <p>© ۱۴۰۴ بیمه البرز. تمامی حقوق محفوظ است.</p>
         </div>
       </div>

@@ -3,7 +3,7 @@ import { Phone, MapPin } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="bg-gradient-to-br from-green-400 to-emerald-500 text-black">
+    <footer className="bg-gradient-to-br from-teal-400 to-green-400 text-black">
       {/* Main footer content */}
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">

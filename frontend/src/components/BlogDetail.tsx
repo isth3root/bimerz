@@ -56,7 +56,7 @@ export function BlogDetail() {
         {blog.image_path && (
           <div className="mb-8">
             <ImageWithFallback
-              src={`${import.meta.env.VITE_DEV_URI}${blog.image_path}`}
+              src={`${import.meta.env.VITE_PROD_URI}${blog.image_path}`}
               alt={blog.title}
               className="w-full h-64 sm:h-80 md:h-96 object-cover rounded-lg"
             />

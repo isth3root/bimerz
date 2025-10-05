@@ -108,7 +108,7 @@ const RulesSection: React.FC = () => {
   };
 
   return (
-    <section className="py-16 bg-gradient-to-br from-green-100 to-emerald-100">
+    <section className="py-16 bg-gradient-to-br from-teal-400 to-green-400">
       <div className="container mx-auto px-4">
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-gray-800">قوانین بیمه</h2>
         <div className="relative">

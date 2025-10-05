@@ -14,7 +14,7 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
   return (
     <header className="bg-white shadow-sm border-b">
       {/* Top bar */}
-      <div className="bg-green-50 py-2">
+      <div className="bg-gradient-to-br from-teal-400 to-green-400 py-2">
         <div className="container mx-auto px-4 flex justify-between items-center flex-row-reverse">
           <div className="text-sm text-gray-700 font-bold">
             نمایندگی رئیس زاده

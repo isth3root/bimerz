@@ -19,14 +19,19 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  const persianToEnglish = (str: string): string => {
+    const persianNumbers = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+    return str.replace(/[۰-۹]/g, (char) => persianNumbers.indexOf(char).toString());
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
       const response = await api.post('/auth/login', {
-        username: nationalCode,
-        password: insuranceCode,
+        username: persianToEnglish(nationalCode),
+        password: persianToEnglish(insuranceCode),
       });
       const data = response.data;
       localStorage.setItem('token', data.access_token);
@@ -46,13 +51,13 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-gray-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="mx-auto mb-4 w-16 h-16 bg-green-600 rounded-full flex items-center justify-center">
-            <span className="text-white font-bold text-2xl">A</span>
-          </div>
-          <h1 className="text-2xl text-gray-900 mb-2">بیمه البرز</h1>
-          <p className="text-gray-600">ورود به سامانه</p>
-        </div>
+         <div className="text-center mb-8">
+           <div className="mx-auto mb-4 w-16 h-16 rounded-full flex items-center justify-center">
+             <img src="/logo.png" alt="Logo" className="w-16 h-16 rounded-full object-cover" />
+           </div>
+           <h1 className="text-2xl text-gray-900 mb-2">بیمه البرز</h1>
+           <p className="text-gray-600">ورود به سامانه</p>
+         </div>
 
         {/* Login Card */}
         <Card className="shadow-lg border-0">

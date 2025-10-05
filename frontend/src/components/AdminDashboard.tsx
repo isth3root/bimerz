@@ -34,6 +34,7 @@ import {
 } from "./ui/select";
 
 import { PriceInput } from "./PriceInput";
+import { Skeleton } from "./ui/skeleton";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Blog } from "../hooks/useBlogs";
 
@@ -232,7 +233,11 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [policies, setPolicies] = useState<Policy[]>([]);
   const [installments, setInstallments] = useState<Installment[]>([]);
-  const [, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [loadingPolicies, setLoadingPolicies] = useState(true);
+  const [loadingInstallments, setLoadingInstallments] = useState(true);
+  const [loadingBlogs, setLoadingBlogs] = useState(true);
+  const [statsLoaded, setStatsLoaded] = useState(false);
   const [stats, setStats] = useState({
     customersCount: 0,
     policiesCount: 0,
@@ -291,6 +296,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   });
   const [deleteInstallment, setDeleteInstallment] =
     useState<Installment | null>(null);
+  const [markAsPaidInstallment, setMarkAsPaidInstallment] = useState<Installment | null>(null);
   const [showAddInstallmentForm, setShowAddInstallmentForm] = useState(false);
 
   const [installmentSearchQuery, setInstallmentSearchQuery] = useState("");
@@ -330,6 +336,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
           image_path: blog.image_path,
         }));
         setBlogs(data);
+        setLoadingBlogs(false);
       } catch (error) {
         console.error('Error fetching blogs:', error);
       }
@@ -446,6 +453,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         nearExpiryPoliciesCount,
         nearExpiryInstallmentsCount,
       });
+      setStatsLoaded(true);
+      setLoadingPolicies(false);
     } catch (error) {
       console.error('Error fetching policies:', error);
       if (error instanceof Error && error.message.includes('401')) {
@@ -501,6 +510,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
             };
           });
           setInstallments(processedInstallments);
+          setLoadingInstallments(false);
       } catch (error) {
         console.error('Error fetching installments:', error);
       }
@@ -976,20 +986,37 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
     setDeleteInstallment(null);
   };
 
-  const handleStatusChange = async (id: string, status: string) => {
+  const handleMarkAsPaid = async () => {
+    if (!markAsPaidInstallment) return;
     try {
-      await api.put(`/installments/${id}`, { status }, {
+      await api.put(`/installments/${markAsPaidInstallment.id}`, { status: 'پرداخت شده' }, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      setInstallments(installments.map(i => i.id === id ? { ...i, status } : i));
-      toast.success("وضعیت قسط بروزرسانی شد.");
+      setInstallments(installments.map(i => i.id === markAsPaidInstallment.id ? { ...i, status: 'پرداخت شده' } : i));
+      toast.success("وضعیت قسط به پرداخت شده تغییر یافت.");
+      setMarkAsPaidInstallment(null);
     } catch (error) {
       console.error(error);
-      toast.error("خطا در بروزرسانی وضعیت");
+      toast.error("خطا در تغییر وضعیت");
     }
   };
+
+  // const handleStatusChange = async (id: string, status: string) => {
+  //   try {
+  //     await api.put(`/installments/${id}`, { status }, {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     });
+  //     setInstallments(installments.map(i => i.id === id ? { ...i, status } : i));
+  //     toast.success("وضعیت قسط بروزرسانی شد.");
+  //   } catch (error) {
+  //     console.error(error);
+  //     toast.error("خطا در بروزرسانی وضعیت");
+  //   }
+  // };
 
   const openEditInstallmentDialog = (installment: Installment) => {
     setEditingInstallment(installment);
@@ -1251,10 +1278,19 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 <img src="/logo.png" alt="Logo" className="w-12 h-12 rounded-lg object-cover" />
               </div>
               <div>
-                <h1 className="text-lg">پنل مدیریت</h1>
-                <p className="text-sm text-gray-600">
-                  سامانه مدیریت بیمه البرز
-                </p>
+                {loading ? (
+                  <>
+                    <Skeleton className="h-6 w-24 mb-1" />
+                    <Skeleton className="h-4 w-32" />
+                  </>
+                ) : (
+                  <>
+                    <h1 className="text-lg">پنل مدیریت</h1>
+                    <p className="text-sm text-gray-600">
+                      سامانه مدیریت بیمه البرز
+                    </p>
+                  </>
+                )}
               </div>
             </div>
 
@@ -1271,67 +1307,95 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
       <div className="container mx-auto px-4 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h2 className="text-2xl mb-2">داشبورد مدیریت</h2>
-          <p className="text-gray-600">مدیریت مشتریان، بیمه‌نامه‌ها و اقساط</p>
+          {loading ? (
+            <>
+              <Skeleton className="h-8 w-48 mb-2" />
+              <Skeleton className="h-4 w-64" />
+            </>
+          ) : (
+            <>
+              <h2 className="text-2xl mb-2">داشبورد مدیریت</h2>
+              <p className="text-gray-600">مدیریت مشتریان، بیمه‌نامه‌ها و اقساط</p>
+            </>
+          )}
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-2">کل مشتریان</p>
-                  <p className="text-3xl">{stats.customersCount - 1}</p>
-                  <p className="text-sm text-green-600 mt-1">آمار به‌روز</p>
-                </div>
-                <Users className="h-8 w-8 text-blue-600" />
-              </div>
-            </CardContent>
-          </Card>
+          {!statsLoaded ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i}>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <Skeleton className="h-4 w-20 mb-2" />
+                      <Skeleton className="h-8 w-12 mb-1" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                    <Skeleton className="h-8 w-8 rounded" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600 mb-2">کل مشتریان</p>
+                      <p className="text-3xl">{stats.customersCount - 1}</p>
+                      <p className="text-sm text-green-600 mt-1">آمار به‌روز</p>
+                    </div>
+                    <Users className="h-8 w-8 text-blue-600" />
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-2">
-                    بیمه‌نامه‌های فعال
-                  </p>
-                  <p className="text-3xl">{stats.policiesCount}</p>
-                  <p className="text-sm text-green-600 mt-1">آمار به‌روز</p>
-                </div>
-                <FileText className="h-8 w-8 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600 mb-2">
+                        بیمه‌نامه‌های فعال
+                      </p>
+                      <p className="text-3xl">{stats.policiesCount}</p>
+                      <p className="text-sm text-green-600 mt-1">آمار به‌روز</p>
+                    </div>
+                    <FileText className="h-8 w-8 text-green-600" />
+                  </div>
+                </CardContent>
+              </Card>
 
 
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-2">اقساط معوق</p>
-                  <p className="text-3xl text-red-600">{stats.overdueInstallmentsCount}</p>
-                  <p className="text-sm text-red-600 mt-1">آمار به‌روز</p>
-                </div>
-                <CreditCard className="h-8 w-8 text-red-600" />
-              </div>
-            </CardContent>
-          </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600 mb-2">اقساط معوق</p>
+                      <p className="text-3xl text-red-600">{stats.overdueInstallmentsCount}</p>
+                      <p className="text-sm text-red-600 mt-1">آمار به‌روز</p>
+                    </div>
+                    <CreditCard className="h-8 w-8 text-red-600" />
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 mb-2">بیمه های نزدیک به انقضا</p>
-                  <p className="text-3xl text-yellow-600">{stats.nearExpiryPoliciesCount}</p>
-                  <p className="text-sm text-yellow-600 mt-1">در ۳۰ روز آینده</p>
-                </div>
-                <Calendar className="h-8 w-8 text-yellow-600" />
-              </div>
-            </CardContent>
-          </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600 mb-2">بیمه های نزدیک به انقضا</p>
+                      <p className="text-3xl text-yellow-600">{stats.nearExpiryPoliciesCount}</p>
+                      <p className="text-sm text-yellow-600 mt-1">در ۳۰ روز آینده</p>
+                    </div>
+                    <Calendar className="h-8 w-8 text-yellow-600" />
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </div>
 
         {/* Management Tabs */}
@@ -1383,7 +1447,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>مدیریت مشتریان</CardTitle>
+                    {loading ? <Skeleton className="h-6 w-32" /> : <CardTitle>مدیریت مشتریان</CardTitle>}
                   </div>
                   <Button
                     onClick={() => {
@@ -1569,65 +1633,79 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       <TableHead className="text-right">وضعیت</TableHead>
                       <TableHead className="text-right">امتیاز</TableHead>
                       <TableHead className="text-right">بیمه‌نامه‌های فعال</TableHead>
-                      
+
                       <TableHead className="text-right">شماره تماس</TableHead>
                       <TableHead className="text-right">کد ملی</TableHead>
                       <TableHead className="text-right">نام و نام خانوادگی</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredCustomers.map((customer) => (
-                      <TableRow key={customer.id}>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => openEditDialog(customer)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-red-600 hover:text-red-700"
-                                  onClick={() => setDeleteCustomer(customer)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>حذف مشتری</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    آیا مطمئن هستید که می‌خواهید این مشتری را
-                                    حذف کنید؟ این عمل قابل بازگشت نیست.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>لغو</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={handleDeleteCustomer}
-                                    className="bg-red-600 hover:bg-red-700"
+                    {loading ? (
+                      Array.from({ length: 5 }).map((_, i) => (
+                        <TableRow key={i}>
+                          <TableCell><Skeleton className="h-8 w-16" /></TableCell>
+                          <TableCell><Skeleton className="h-6 w-12" /></TableCell>
+                          <TableCell><Skeleton className="h-6 w-8" /></TableCell>
+                          <TableCell><Skeleton className="h-6 w-8" /></TableCell>
+                          <TableCell><Skeleton className="h-6 w-20" /></TableCell>
+                          <TableCell><Skeleton className="h-6 w-16" /></TableCell>
+                          <TableCell><Skeleton className="h-6 w-24" /></TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      filteredCustomers.map((customer) => (
+                        <TableRow key={customer.id}>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openEditDialog(customer)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-red-600 hover:text-red-700"
+                                    onClick={() => setDeleteCustomer(customer)}
                                   >
-                                    حذف
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </TableCell>
-                        <TableCell>{getStatusBadge(customer.status)}</TableCell>
-                        <TableCell>{customer.score}</TableCell>
-                        <TableCell>{customer.activePolicies}</TableCell>
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>حذف مشتری</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      آیا مطمئن هستید که می‌خواهید این مشتری را
+                                      حذف کنید؟ این عمل قابل بازگشت نیست.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>لغو</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={handleDeleteCustomer}
+                                      className="bg-red-600 hover:bg-red-700"
+                                    >
+                                      حذف
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </TableCell>
+                          <TableCell>{getStatusBadge(customer.status)}</TableCell>
+                          <TableCell>{customer.score}</TableCell>
+                          <TableCell>{customer.activePolicies}</TableCell>
 
-                        <TableCell>{customer.phone}</TableCell>
-                        <TableCell>{customer.nationalCode}</TableCell>
-                        <TableCell>{customer.name}</TableCell>
-                      </TableRow>
-                    ))}
+                          <TableCell>{customer.phone}</TableCell>
+                          <TableCell>{customer.nationalCode}</TableCell>
+                          <TableCell>{customer.name}</TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>
@@ -1641,7 +1719,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>مدیریت بیمه‌نامه‌ها</CardTitle>
+                    {loadingPolicies ? <Skeleton className="h-6 w-40" /> : <CardTitle>مدیریت بیمه‌نامه‌ها</CardTitle>}
                   </div>
                   <Button
                     onClick={() => setShowAddPolicyForm((prev) => !prev)}
@@ -2113,7 +2191,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>مدیریت اقساط</CardTitle>
+                  {loadingInstallments ? <Skeleton className="h-6 w-24" /> : <CardTitle>مدیریت اقساط</CardTitle>}
                 </div>
               </CardHeader>
               <CardContent>
@@ -2440,19 +2518,36 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Select
-                              value={installment.status}
-                              onValueChange={(value) => handleStatusChange(installment.id, value)}
-                            >
-                              <SelectTrigger className={`w-32 ${installment.status === 'معوق' ? 'bg-red-300' : installment.status === 'آینده' ? 'bg-blue-300' : 'bg-green-300'}`}>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="معوق">معوق</SelectItem>
-                                <SelectItem value="آینده">آینده</SelectItem>
-                                <SelectItem value="پرداخت شده">پرداخت شده</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <div className="flex items-center gap-2">
+                              {getStatusBadge(installment.status)}
+                              {installment.status !== 'پرداخت شده' && (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => setMarkAsPaidInstallment(installment)}
+                                    >
+                                      پرداخت شد
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>تایید پرداخت</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        آیا مطمئن هستید که این قسط را به عنوان پرداخت شده علامت بزنید؟
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel onClick={() => setMarkAsPaidInstallment(null)}>لغو</AlertDialogCancel>
+                                      <AlertDialogAction onClick={handleMarkAsPaid}>
+                                        تایید
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell>
                             {installment.status === 'پرداخت شده' ? (
@@ -2492,7 +2587,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>مدیریت وبلاگ</CardTitle>
+                    {loadingBlogs ? <Skeleton className="h-6 w-24" /> : <CardTitle>مدیریت وبلاگ</CardTitle>}
                   </div>
                   <Button
                     onClick={() => setShowAddBlogForm((prev) => !prev)}

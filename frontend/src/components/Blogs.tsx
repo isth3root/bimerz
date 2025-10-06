@@ -29,7 +29,7 @@ export function Blogs() {
                   className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                 />
                 <div className="absolute top-4 right-4">
-                  <span className="bg-green-600 text-white px-3 py-1 rounded-full text-xs">
+                  <span className="bg-gradient-to-br from-teal-400 to-green-400 text-white px-3 py-1 rounded-full text-xs">
                     {post.category}
                   </span>
                 </div>

@@ -19,7 +19,7 @@ export function Footer() {
               </div>
             </div>
             <p className="font-semibold leading-relaxed mb-6">
-               تجربه, تخصص و اعتماد; سه رکن خدمات ما در بیمه البرز
+               تجربه, تخصص و اعتماد<br></br> سه رکن خدمات ما در بیمه البرز
             </p>
           </div>
 
@@ -28,13 +28,15 @@ export function Footer() {
           <div>
             <h4 className="text-lg mb-6 font-semibold">تماس با ما</h4>
             <ul className="space-y-4">
+              
               <li className="flex items-center gap-3">
                 <Phone className="h-5 w-5" />
-                <span className="font-semibold">09385540717</span>
+                <a href="tel:09385540717" className="font-semibold">09385540717</a>
               </li>
+              
               <li className="flex items-center gap-3">
                 <Phone className="h-5 w-5" />
-                <span className="font-semibold">061-33303066</span>
+                <a href="tel:061-33303066" className="font-semibold">061-33303066</a>
               </li>
               <li className="flex items-start gap-3">
                 <MapPin className="h-5 w-5 mt-1" />
@@ -67,7 +69,7 @@ export function Footer() {
       {/* Copyright */}
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row justify-center items-center text-sm">
-          <p className="font-semibold">تمامی حقوق سایت متعلق به بیمه البرز نمایندگی رئیس زاده می باشد</p>
+          <p className="font-semibold text-xs">تمامی حقوق سایت متعلق به بیمه البرز نمایندگی رئیس زاده می باشد</p>
         </div>
       </div>
     </footer>

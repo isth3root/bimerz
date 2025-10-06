@@ -71,10 +71,10 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
               درباره ما
             </button>
             <button
-              onClick={() => onNavigate('/contact')}
-              className={`cursor-pointer transition-colors ${currentPage === 'contact' ? 'text-green-600 font-semibold' : 'text-gray-700 hover:text-green-600'}`}
+              onClick={() => onNavigate('/yaqut-alborz')}
+              className={`cursor-pointer transition-colors ${currentPage === 'yaqut-alborz' ? 'text-green-600 font-semibold' : 'text-gray-700 hover:text-green-600'}`}
             >
-              تماس با ما
+              یاقوت البرز
             </button>
           </nav>
 
@@ -111,10 +111,10 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
                   درباره ما
                 </button>
                 <button
-                  onClick={() => { onNavigate('/contact'); setIsOpen(false); }}
-                  className={`w-full text-center py-3 px-4 rounded-lg transition-colors ${currentPage === 'contact' ? 'bg-gradient-to-br from-teal-400 to-green-400 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
+                  onClick={() => { onNavigate('/yaqut-alborz'); setIsOpen(false); }}
+                  className={`w-full text-center py-3 px-4 rounded-lg transition-colors ${currentPage === 'yaqut-alborz' ? 'bg-gradient-to-br from-teal-400 to-green-400 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
                 >
-                  تماس با ما
+                  یاقوت البرز
                 </button>
               </nav>
             </SheetContent>

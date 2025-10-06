@@ -10,11 +10,12 @@ import { Footer } from './components/Footer';
 import { LoginPage } from './components/LoginPage';
 import { CustomerDashboard } from './components/CustomerDashboard';
 import { AdminDashboard } from './components/AdminDashboard';
-import { ContactUs } from './components/ContactUs';
 import { AboutUs } from './components/AboutUs';
 import { NotFound } from './components/NotFound';
 import { Blogs } from './components/Blogs';
 import { BlogDetail } from './components/BlogDetail';
+import { OnlineDamage } from './components/OnlineDamage';
+import { YaqutAlborz } from './components/YaqutAlborz';
 
 type UserType = 'customer' | 'admin' | 'admin-2' | 'admin-3' | null;
 
@@ -77,6 +78,7 @@ function AppContent() {
       <Route path="/" element={
         <div className="min-h-screen bg-white">
           <Header onNavigate={handleNavigate} currentPage={currentPage} />
+          <OnlineDamage onNavigate={handleNavigate} />
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -112,17 +114,17 @@ function AppContent() {
       <Route path="/admin-dashboard" element={
         userType && userType !== 'customer' ? <AdminDashboard onLogout={handleLogout} /> : <NotFound />
       } />
-      <Route path="/contact" element={
-        <div className="min-h-screen bg-white">
-          <Header onNavigate={handleNavigate} currentPage={currentPage} />
-          <ContactUs />
-          <Footer />
-        </div>
-      } />
       <Route path="/about" element={
         <div className="min-h-screen bg-white">
           <Header onNavigate={handleNavigate} currentPage={currentPage} />
           <AboutUs />
+          <Footer />
+        </div>
+      } />
+      <Route path="/yaqut-alborz" element={
+        <div className="min-h-screen bg-white">
+          <Header onNavigate={handleNavigate} currentPage={currentPage} />
+          <YaqutAlborz />
           <Footer />
         </div>
       } />

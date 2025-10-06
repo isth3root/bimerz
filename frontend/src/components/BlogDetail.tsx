@@ -37,7 +37,7 @@ export function BlogDetail() {
         {/* Article Header */}
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-4">
-            <span className="bg-green-600 text-white px-3 py-1 rounded-full text-sm">
+            <span className="bg-gradient-to-br from-teal-400 to-green-400 text-white px-3 py-1 rounded-full text-sm">
               {blog.category}
             </span>
           </div>

@@ -35,7 +35,7 @@ export function AboutUs() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-green-600 to-green-700 text-white py-20">
+      <section className="bg-gradient-to-br from-teal-400 to-green-400 text-white py-20">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">درباره بیمه البرز</h1>
           <p className="text-xl max-w-3xl mx-auto">

@@ -3,7 +3,7 @@ import { Phone, MapPin } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="bg-gradient-to-br from-teal-400 to-green-400 text-black">
+    <footer className="bg-gradient-to-br from-teal-400 to-green-400">
       {/* Main footer content */}
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -14,34 +14,38 @@ export function Footer() {
                 <img src="/logo.png" alt="Logo" className="w-12 h-12 rounded-lg object-cover" />
               </div>
               <div>
-                <h3 className="text-xl">بیمه البرز</h3>
-                <p className="text-sm text-black">همراه شما در همه مراحل زندگی</p>
+                <h3 className="text-xl font-semibold">بیمه البرز</h3>
+                <p className="text-sm font-semibold">همراه شما در همه مراحل زندگی</p>
               </div>
             </div>
-            <p className="text-black leading-relaxed mb-6">
-              بیش از ۲۰ سال تجربه در ارائه خدمات بیمه‌ای با بالاترین کیفیت و اعتماد مشتریان
+            <p className="font-semibold leading-relaxed mb-6">
+               تجربه, تخصص و اعتماد; سه رکن خدمات ما در بیمه البرز
             </p>
           </div>
 
 
           {/* Contact info */}
           <div>
-            <h4 className="text-lg mb-6">تماس با ما</h4>
+            <h4 className="text-lg mb-6 font-semibold">تماس با ما</h4>
             <ul className="space-y-4">
               <li className="flex items-center gap-3">
-                <Phone className="h-5 w-5 text-black" />
-                <span className="text-black">09385540717</span>
+                <Phone className="h-5 w-5" />
+                <span className="font-semibold">09385540717</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <Phone className="h-5 w-5" />
+                <span className="font-semibold">061-33303066</span>
               </li>
               <li className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-black mt-1" />
-                <span className="text-black">اهواز امانیه خیابان سقراط شرقی مجتمع گلاریس طبقه ۳ واحد ۱۱</span>
+                <MapPin className="h-5 w-5 mt-1" />
+                <span className="font-semibold">اهواز امانیه خیابان سقراط شرقی مجتمع گلاریس طبقه ۳ واحد ۱۱</span>
               </li>
             </ul>
           </div>
 
           {/* Map */}
           <div className="flex flex-col">
-            <p>موقعیت ما روی نقشه</p>
+            <p className="font-semibold">موقعیت ما روی نقشه</p>
             <div className="mt-4">
               <iframe
                 src="https://maps.google.com/maps?q=31.3204177,48.6673714&output=embed"
@@ -58,12 +62,12 @@ export function Footer() {
         </div>
       </div>
 
-      <Separator className="bg-green-500" />
+      <Separator className="bg-teal-500" />
 
       {/* Copyright */}
       <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-col md:flex-row justify-center items-center text-sm text-black">
-          <p>© ۱۴۰۴ بیمه البرز. تمامی حقوق محفوظ است.</p>
+        <div className="flex flex-col md:flex-row justify-center items-center text-sm">
+          <p className="font-semibold">تمامی حقوق سایت متعلق به بیمه البرز نمایندگی رئیس زاده می باشد</p>
         </div>
       </div>
     </footer>

@@ -6,7 +6,11 @@ import { SearchX } from 'lucide-react';
 export function NotFound() {
   const navigate = useNavigate();
   const handleNavigate = (page: string) => {
-    navigate(page);
+    if (page.startsWith('/')) {
+      navigate(page);
+    } else {
+      navigate('/' + page);
+    }
   };
 
   return (

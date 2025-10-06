@@ -22,7 +22,7 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onNavigate('login')}
+            onClick={() => onNavigate('/login')}
             className="text-black cursor-pointer font-bold"
           >
             <User className="h-4 w-4 mr-2 font-bold text-black" />
@@ -53,7 +53,7 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
             </button>
             
             <button
-              onClick={() => onNavigate('blogs')}
+              onClick={() => onNavigate('/blogs')}
               className={`cursor-pointer transition-colors ${currentPage === 'blogs' ? 'text-green-600 font-semibold' : 'text-gray-700 hover:text-green-600'}`}
             >
               وبلاگ
@@ -65,13 +65,13 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
               قوانین بیمه
             </button>
             <button
-              onClick={() => onNavigate('about')}
+              onClick={() => onNavigate('/about')}
               className={`cursor-pointer transition-colors ${currentPage === 'about' ? 'text-green-600 font-semibold' : 'text-gray-700 hover:text-green-600'}`}
             >
               درباره ما
             </button>
             <button
-              onClick={() => onNavigate('contact')}
+              onClick={() => onNavigate('/contact')}
               className={`cursor-pointer transition-colors ${currentPage === 'contact' ? 'text-green-600 font-semibold' : 'text-gray-700 hover:text-green-600'}`}
             >
               تماس با ما
@@ -88,37 +88,31 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
               <nav className="flex flex-col gap-6 mt-8 px-4">
                 <button
                   onClick={() => { onNavigate('/'); setIsOpen(false); }}
-                  className={`w-full text-center py-3 px-4 rounded-lg transition-colors ${currentPage === 'home' ? 'bg-green-100 text-green-600 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
+                  className={`w-full text-center py-3 px-4 rounded-lg transition-colors ${currentPage === 'home' ? 'bg-gradient-to-br from-teal-400 to-green-400 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
                 >
                   صفحه اصلی
                 </button>
                 <button
-                  onClick={() => { onNavigate('services'); setIsOpen(false); }}
-                  className={`w-full text-center py-3 px-4 rounded-lg transition-colors ${currentPage === 'services' ? 'bg-green-100 text-green-600 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
-                >
-                  خدمات
-                </button>
-                <button
-                  onClick={() => { onNavigate('blogs'); setIsOpen(false); }}
-                  className={`w-full text-center py-3 px-4 rounded-lg transition-colors ${currentPage === 'blogs' ? 'bg-green-100 text-green-600 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
+                  onClick={() => { onNavigate('/blogs'); setIsOpen(false); }}
+                  className={`w-full text-center py-3 px-4 rounded-lg transition-colors ${currentPage === 'blogs' ? 'bg-gradient-to-br from-teal-400 to-green-400 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
                 >
                   وبلاگ
                 </button>
                 <button
                   onClick={() => { onNavigate('rules'); setIsOpen(false); }}
-                  className={`w-full text-center py-3 px-4 rounded-lg transition-colors ${currentPage === 'rules' ? 'bg-green-100 text-green-600 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
+                  className={`w-full text-center py-3 px-4 rounded-lg transition-colors ${currentPage === 'rules' ? 'bg-gradient-to-br from-teal-400 to-green-400 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
                 >
                   قوانین بیمه
                 </button>
                 <button
-                  onClick={() => { onNavigate('about'); setIsOpen(false); }}
-                  className={`w-full text-center py-3 px-4 rounded-lg transition-colors ${currentPage === 'about' ? 'bg-green-100 text-green-600 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
+                  onClick={() => { onNavigate('/about'); setIsOpen(false); }}
+                  className={`w-full text-center py-3 px-4 rounded-lg transition-colors ${currentPage === 'about' ? 'bg-gradient-to-br from-teal-400 to-green-400 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
                 >
                   درباره ما
                 </button>
                 <button
-                  onClick={() => { onNavigate('contact'); setIsOpen(false); }}
-                  className={`w-full text-center py-3 px-4 rounded-lg transition-colors ${currentPage === 'contact' ? 'bg-green-100 text-green-600 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
+                  onClick={() => { onNavigate('/contact'); setIsOpen(false); }}
+                  className={`w-full text-center py-3 px-4 rounded-lg transition-colors ${currentPage === 'contact' ? 'bg-gradient-to-br from-teal-400 to-green-400 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
                 >
                   تماس با ما
                 </button>

@@ -1156,7 +1156,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   );
 
   const handleAddBlog = async () => {
-    if (!formDataBlog.title.trim() || !formDataBlog.summary.trim() || !formDataBlog.content.trim() || !formDataBlog.category.trim()) {
+    if (!formDataBlog.title.trim() || !formDataBlog.summary.trim() || !formDataBlog.content.trim()) {
       alert("لطفا تمام فیلدهای مورد نیاز را پر کنید.");
       return;
     }
@@ -2933,7 +2933,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     <div className="grid gap-4 py-2">
                       <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="blog-title" className="text-right">
-                          عنوان
+                          عنوان <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="blog-title"
@@ -2950,7 +2950,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       </div>
                       <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="blog-summary" className="text-right">
-                          خلاصه
+                          خلاصه <span className="text-red-500">*</span>
                         </Label>
                         <Input
                           id="blog-summary"
@@ -2967,7 +2967,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       </div>
                       <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="blog-content" className="text-right">
-                          محتوا
+                          محتوا <span className="text-red-500">*</span>
                         </Label>
                         <textarea
                           id="blog-content"

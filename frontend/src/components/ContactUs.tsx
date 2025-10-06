@@ -9,7 +9,7 @@ export function ContactUs() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-green-600 to-green-700 text-white py-20">
+      <section className="bg-gradient-to-br from-teal-400 to-green-400 text-white py-20">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">تماس با ما</h1>
           <p className="text-xl max-w-2xl mx-auto">
@@ -33,6 +33,7 @@ export function ContactUs() {
                   <div>
                     <h3 className="text-lg font-semibold mb-2">تلفن</h3>
                     <p className="text-gray-600">09385540717</p>
+                    <p className="text-gray-600">061-33303066</p>
                   </div>
                 </div>
 

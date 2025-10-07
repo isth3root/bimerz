@@ -13,10 +13,7 @@ export function Blogs() {
     <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
-          <h1 className="text-4xl mb-4">وبلاگ بیمه البرز</h1>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            مطالب مفید و آموزشی در زمینه بیمه برای آگاهی بیشتر شما
-          </p>
+          <h1 className="text-4xl mb-4">مطالب مفید و آموزشی در زمینه بیمه</h1>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

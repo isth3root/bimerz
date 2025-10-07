@@ -65,7 +65,7 @@ export function AboutUs() {
           <div className="max-w-4xl mx-auto">
             <h2 className="text-3xl font-bold mb-6 text-center">تاریخچه شرکت</h2>
             <p className="text-gray-600 mb-8 leading-relaxed">
-              شرکت بیمه البرز با هدف اولیه ارائه خدمات بیمه ای مطلوب و با کیفیت به هموطنان و ایجاد تنوع در بازار بیمه و کسب رضایت بیمه گذراران در تاریخ ۲۸ تیرماه ۱۳۳۸ توسط بخش خصوصی تاسیس و در مدت زمان کوتاهی توانست اعتماد بسیاری از صاحبان سرمایه و کالا را به خود جلب نماید. پس از پیروزی انقلاب اسلامی بیمه البرز به دلیل عملکرد موفق با همان نام به فعالیت خود ادامه داد . شرکت بیمه البرز هم اکنون با 60 شعبه و بیش از 4000 نماینده و کارگزار فعال، در سرتاسر کشور آماده ارایه خدمات بیمه ای به هموطنان است .
+              شرکت بیمه البرز با هدف ارائه خدمات بیمه ای مطلوب و با کیفیت به هموطنان و ایجاد تنوع در بازار بیمه و کسب رضایت بیمه گذراران در تاریخ ۲۸ تیرماه ۱۳۳۸ توسط بخش خصوصی تاسیس و در مدت زمان کوتاهی توانست اعتماد بسیاری از صاحبان سرمایه و کالا را به خود جلب نماید. پس از پیروزی انقلاب اسلامی بیمه البرز به دلیل عملکرد موفق با همان نام به فعالیت خود ادامه داد . شرکت بیمه البرز هم اکنون با بیش از 60 شعبه و بیش از 4000 نماینده و کارگزار فعال، در سرتاسر کشور آماده ارایه خدمات بیمه ای به هموطنان است .
             </p>
             <p className="text-gray-600 mb-8 leading-relaxed">
               بیمه البرز که دارای بیشترین ظرفیت نگهداری ریسک در بین شرکت های بیمه خصوصی است،‌ در سال‌های اخیر موفقیت‌های بیشماری در صنعت بیمه کشور و همچنین دستگاه‌های اجرایی کشور به دست آورده است.
@@ -87,28 +87,21 @@ export function AboutUs() {
       </section>
 
       {/* Values Section */}
-      <section className="py-16">
+      <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">ارزش‌های ما</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              ارزش‌هایی که در تمامی فعالیت‌های ما راهنمای ما هستند
-            </p>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {values.map((value, index) => {
               const IconComponent = value.icon;
               return (
-                <Card key={index} className="text-center hover:shadow-lg transition-shadow">
+                <Card key={index} className="text-center hover:shadow-lg transition-shadow bg-gradient-to-br from-teal-400 to-green-400">
                   <CardHeader>
-                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
                       <IconComponent className="h-8 w-8 text-green-600" />
                     </div>
                     <CardTitle className="text-xl">{value.title}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <CardDescription className="text-sm">
+                    <CardDescription className="text-sm text-black">
                       {value.description}
                     </CardDescription>
                   </CardContent>

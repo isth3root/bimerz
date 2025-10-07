@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
-import { Menu, User } from "lucide-react";
+import { Menu, User, Gem } from "lucide-react";
 
 interface HeaderProps {
   onNavigate: (page: string) => void;
@@ -12,7 +12,7 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <header className="bg-white shadow-sm border-b">
+    <header className="bg-white shadow-sm border-b sticky top-0 z-50">
       {/* Top bar */}
       <div className="bg-gradient-to-br from-teal-400 to-green-400 py-2">
         <div className="container mx-auto px-4 flex justify-between items-center flex-row-reverse">
@@ -26,7 +26,7 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
             className="text-black cursor-pointer font-bold"
           >
             <User className="h-4 w-4 mr-2 font-bold text-black" />
-            ورود به سامانه
+            حساب کاربری
           </Button>
         </div>
       </div>
@@ -51,12 +51,19 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
             >
               صفحه اصلی
             </button>
+            <button
+              onClick={() => onNavigate('/yaqut-alborz')}
+              className={`group cursor-pointer transition-colors ${currentPage === 'yaqut-alborz' ? 'text-green-600 font-semibold' : 'text-gray-700 hover:text-green-600'}`}
+            >
+              <Gem className="h-4 w-4 mr-2 inline group-hover:brightness-150 group-hover:drop-shadow-xl group-hover:scale-125 transition-all duration-300 mx-1" />
+              یاقوت البرز
+            </button>
             
             <button
               onClick={() => onNavigate('/blogs')}
               className={`cursor-pointer transition-colors ${currentPage === 'blogs' ? 'text-green-600 font-semibold' : 'text-gray-700 hover:text-green-600'}`}
             >
-              وبلاگ
+              اخبار
             </button>
             <button
               onClick={() => onNavigate('rules')}
@@ -69,12 +76,6 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
               className={`cursor-pointer transition-colors ${currentPage === 'about' ? 'text-green-600 font-semibold' : 'text-gray-700 hover:text-green-600'}`}
             >
               درباره ما
-            </button>
-            <button
-              onClick={() => onNavigate('/yaqut-alborz')}
-              className={`cursor-pointer transition-colors ${currentPage === 'yaqut-alborz' ? 'text-green-600 font-semibold' : 'text-gray-700 hover:text-green-600'}`}
-            >
-              یاقوت البرز
             </button>
           </nav>
 
@@ -93,10 +94,17 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
                   صفحه اصلی
                 </button>
                 <button
+                  onClick={() => { onNavigate('/yaqut-alborz'); setIsOpen(false); }}
+                  className={`group w-full text-center py-3 px-4 rounded-lg transition-colors ${currentPage === 'yaqut-alborz' ? 'bg-gradient-to-br from-teal-400 to-green-400 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
+                >
+                  <Gem className="h-4 w-4 mr-2 inline group-hover:brightness-150 group-hover:drop-shadow-xl group-hover:scale-125 transition-all duration-300" />
+                  یاقوت البرز
+                </button>
+                <button
                   onClick={() => { onNavigate('/blogs'); setIsOpen(false); }}
                   className={`w-full text-center py-3 px-4 rounded-lg transition-colors ${currentPage === 'blogs' ? 'bg-gradient-to-br from-teal-400 to-green-400 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
                 >
-                  وبلاگ
+                  اخبار
                 </button>
                 <button
                   onClick={() => { onNavigate('rules'); setIsOpen(false); }}
@@ -109,12 +117,6 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
                   className={`w-full text-center py-3 px-4 rounded-lg transition-colors ${currentPage === 'about' ? 'bg-gradient-to-br from-teal-400 to-green-400 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
                 >
                   درباره ما
-                </button>
-                <button
-                  onClick={() => { onNavigate('/yaqut-alborz'); setIsOpen(false); }}
-                  className={`w-full text-center py-3 px-4 rounded-lg transition-colors ${currentPage === 'yaqut-alborz' ? 'bg-gradient-to-br from-teal-400 to-green-400 font-semibold' : 'text-gray-700 hover:bg-gray-100'}`}
-                >
-                  یاقوت البرز
                 </button>
               </nav>
             </SheetContent>

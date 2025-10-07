@@ -6,7 +6,7 @@ interface OnlineDamageProps {
 
 export function OnlineDamage({ onNavigate }: OnlineDamageProps) {
   return (
-    <section className="py-16 bg-gradient-to-br from-teal-400 to-green-400">
+    <section className="py-16 bg-gradient-to-br from-teal-300 to-green-300">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           <div className="text-center lg:text-right">

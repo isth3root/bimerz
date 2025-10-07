@@ -98,7 +98,7 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
                     value={insuranceCode}
                     onChange={(e) => setInsuranceCode(e.target.value)}
                     required
-                    className="text-right pr-10"
+                    className="text-right"
                   />
                   <button
                     type="button"
@@ -112,7 +112,7 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
 
               <Button 
                 type="submit" 
-                className="w-full bg-green-600 hover:bg-green-700 mt-6"
+                className="w-full bg-gradient-to-br from-teal-400 to-green-400 mt-6"
                 disabled={isLoading}
               >
                 {isLoading ? 'در حال ورود...' : 'ورود'}

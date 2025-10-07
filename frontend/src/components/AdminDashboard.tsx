@@ -24,6 +24,14 @@ import {
   AlertDialogTrigger,
 } from "./ui/alert-dialog";
 import { Label } from "./ui/label";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "./ui/pagination";
 
 import {
   Select,
@@ -277,6 +285,10 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [deleteCustomer, setDeleteCustomer] = useState<Customer | null>(null);
   const [toggleCustomer, setToggleCustomer] = useState<Customer | null>(null);
   const [showCustomerForm, setShowCustomerForm] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const [currentPagePolicies, setCurrentPagePolicies] = useState(1);
+  const itemsPerPagePolicies = 10;
 
   const [policySearchQuery, setPolicySearchQuery] = useState("");
   
@@ -575,17 +587,45 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
     return `${formatted} ریال`;
   };
 
+  const toPersianDigits = (str: string) => str.replace(/[0-9]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[parseInt(d)]);
+
+  const translateRole = (role: string) => {
+    switch (role) {
+      case 'customer': return 'مشتری';
+      case 'admin': return 'ادمین';
+      case 'admin-2': return 'ادمین درجه ۲';
+      case 'admin-3': return 'ادمین درجه ۳';
+      default: return role;
+    }
+  };
+
   const filteredCustomers = customers.filter(
     (customer) =>
       customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       customer.nationalCode.includes(searchQuery)
   );
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    setCurrentPagePolicies(1);
+  }, [policySearchQuery]);
+
+  const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedCustomers = filteredCustomers.slice(startIndex, startIndex + itemsPerPage);
+
   const filteredPolicies = policies.filter(
     (policy) =>
       policy.id.includes(policySearchQuery) ||
       policy.customerName.toLowerCase().includes(policySearchQuery.toLowerCase())
   );
+
+  const totalPagesPolicies = Math.ceil(filteredPolicies.length / itemsPerPagePolicies);
+  const startIndexPolicies = (currentPagePolicies - 1) * itemsPerPagePolicies;
+  const paginatedPolicies = filteredPolicies.slice(startIndexPolicies, startIndexPolicies + itemsPerPagePolicies);
 
   const handleAddCustomer = async () => {
     if (!formData.name.trim() || !formData.nationalCode.trim() || !formData.phone.trim()) {
@@ -1414,7 +1454,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm text-gray-600 mb-2">کل مقالات</p>
-                        <p className="text-3xl">{blogs.length}</p>
+                        <p className="text-3xl">{toPersianDigits(blogs.length.toString())}</p>
                         <p className="text-sm text-green-600 mt-1">آمار به‌روز</p>
                       </div>
                       <FileText className="h-8 w-8 text-blue-600" />
@@ -1467,7 +1507,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm text-gray-600 mb-2">اقساط معوق</p>
-                        <p className="text-3xl text-red-600">{stats.overdueInstallmentsCount}</p>
+                        <p className="text-3xl text-red-600">{toPersianDigits(stats.overdueInstallmentsCount.toString())}</p>
                         <p className="text-sm text-red-600 mt-1">آمار به‌روز</p>
                       </div>
                       <CreditCard className="h-8 w-8 text-red-600" />
@@ -1480,7 +1520,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm text-gray-600 mb-2">بیمه های نزدیک به انقضا</p>
-                        <p className="text-3xl text-yellow-600">{stats.nearExpiryPoliciesCount}</p>
+                        <p className="text-3xl text-yellow-600">{toPersianDigits(stats.nearExpiryPoliciesCount.toString())}</p>
                         <p className="text-sm text-yellow-600 mt-1">در ۳۰ روز آینده</p>
                       </div>
                       <Calendar className="h-8 w-8 text-yellow-600" />
@@ -1548,7 +1588,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm text-gray-600 mb-2">کل مشتریان</p>
-                        <p className="text-3xl">{customers.filter(c => (c.role || 'customer') === 'customer').length}</p>
+                        <p className="text-3xl">{toPersianDigits(customers.filter(c => (c.role || 'customer') === 'customer').length.toString())}</p>
                         <p className="text-sm text-green-600 mt-1">آمار به‌روز</p>
                       </div>
                       <Users className="h-8 w-8 text-blue-600" />
@@ -1563,7 +1603,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         <p className="text-sm text-gray-600 mb-2">
                           بیمه‌نامه‌های فعال
                         </p>
-                        <p className="text-3xl">{stats.policiesCount}</p>
+                        <p className="text-3xl">{toPersianDigits(stats.policiesCount.toString())}</p>
                         <p className="text-sm text-green-600 mt-1">آمار به‌روز</p>
                       </div>
                       <FileText className="h-8 w-8 text-green-600" />
@@ -1576,7 +1616,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm text-gray-600 mb-2">اقساط معوق</p>
-                        <p className="text-3xl text-red-600">{stats.overdueInstallmentsCount}</p>
+                        <p className="text-3xl text-red-600">{toPersianDigits(stats.overdueInstallmentsCount.toString())}</p>
                         <p className="text-sm text-red-600 mt-1">آمار به‌روز</p>
                       </div>
                       <CreditCard className="h-8 w-8 text-red-600" />
@@ -1589,7 +1629,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm text-gray-600 mb-2">بیمه های نزدیک به انقضا</p>
-                        <p className="text-3xl text-yellow-600">{stats.nearExpiryPoliciesCount}</p>
+                        <p className="text-3xl text-yellow-600">{toPersianDigits(stats.nearExpiryPoliciesCount.toString())}</p>
                         <p className="text-sm text-yellow-600 mt-1">در ۳۰ روز آینده</p>
                       </div>
                       <Calendar className="h-8 w-8 text-yellow-600" />
@@ -1640,7 +1680,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
               className="relative z-10 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
             >
               {" "}
-              وبلاگ
+              اخبار
             </TabsTrigger>}
           </TabsList>
 
@@ -1907,7 +1947,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredCustomers.map((customer) => (
+                      paginatedCustomers.map((customer) => (
                         <TableRow key={customer.id}>
                           <TableCell>
                             <div className="flex gap-2">
@@ -1959,8 +1999,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                             </button>
                           </TableCell>
                           <TableCell>{customer.score}</TableCell>
-                          <TableCell>{customer.role || 'customer'}</TableCell>
-                          <TableCell>{customer.activePolicies}</TableCell>
+                          <TableCell>{translateRole(customer.role || 'customer')}</TableCell>
+                          <TableCell>{toPersianDigits(customer.activePolicies.toString())}</TableCell>
                           <TableCell>{customer.phone}</TableCell>
                           <TableCell>{customer.nationalCode}</TableCell>
                           <TableCell>{customer.name}</TableCell>
@@ -1969,6 +2009,37 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     )}
                   </TableBody>
                 </Table>
+                {filteredCustomers.length > 0 && (
+                  <div className="mt-4 flex justify-center">
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          />
+                        </PaginationItem>
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                          <PaginationItem key={page}>
+                            <PaginationLink
+                              isActive={page === currentPage}
+                              onClick={() => setCurrentPage(page)}
+                              className="cursor-pointer"
+                            >
+                              {toPersianDigits(page.toString())}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ))}
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                            className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -2433,8 +2504,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                      </TableRow>
                    </TableHeader>
                   <TableBody>
-                    {filteredPolicies.length > 0 ? (
-                      filteredPolicies.map((policy) => (
+                    {paginatedPolicies.length > 0 ? (
+                      paginatedPolicies.map((policy) => (
                         <TableRow key={policy.id}>
                           <TableCell>
                             <div className="flex gap-2">
@@ -2482,8 +2553,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                           <TableCell>{getStatusBadge(policy.status)}</TableCell>
                           <TableCell>{policy.paymentType}</TableCell>
                           <TableCell>{policy.payId}</TableCell>
-                          <TableCell>{policy.installmentsCount || 0}</TableCell>
-                          <TableCell>{formatPrice(policy.premium)}</TableCell>
+                          <TableCell>{toPersianDigits((policy.installmentsCount || 0).toString())}</TableCell>
+                          <TableCell>{toPersianDigits(formatPrice(policy.premium))}</TableCell>
                           <TableCell>{policy.endDate}</TableCell>
                           <TableCell>{policy.startDate}</TableCell>
                           <TableCell>{policy.vehicle}</TableCell>
@@ -2501,6 +2572,37 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     )}
                   </TableBody>
                 </Table>
+                {filteredPolicies.length > 0 && (
+                  <div className="mt-4 flex justify-center">
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={() => setCurrentPagePolicies(prev => Math.max(prev - 1, 1))}
+                            className={currentPagePolicies === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          />
+                        </PaginationItem>
+                        {Array.from({ length: totalPagesPolicies }, (_, i) => i + 1).map(page => (
+                          <PaginationItem key={page}>
+                            <PaginationLink
+                              isActive={page === currentPagePolicies}
+                              onClick={() => setCurrentPagePolicies(page)}
+                              className="cursor-pointer"
+                            >
+                              {toPersianDigits(page.toString())}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ))}
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={() => setCurrentPagePolicies(prev => Math.min(prev + 1, totalPagesPolicies))}
+                            className={currentPagePolicies === totalPagesPolicies ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -2873,14 +2975,14 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                               "-"
                             ) : installment.daysOverdue > 0 ? (
                               <span className="text-red-600">
-                                {installment.daysOverdue} روز
+                                {toPersianDigits(installment.daysOverdue.toString())} روز
                               </span>
                             ) : (
                               "-"
                             )}
                           </TableCell>
                           <TableCell>{installment.dueDate}</TableCell>
-                          <TableCell>{formatPrice(installment.amount)}</TableCell>
+                          <TableCell>{toPersianDigits(formatPrice(installment.amount))}</TableCell>
                           <TableCell>{installment.policyType}</TableCell>
                           <TableCell>{installment.customerName}</TableCell>
                         </TableRow>
@@ -2904,7 +3006,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    {loadingBlogs ? <Skeleton className="h-6 w-24" /> : <CardTitle>مدیریت وبلاگ</CardTitle>}
+                    {loadingBlogs ? <Skeleton className="h-6 w-24" /> : <CardTitle>مدیریت اخبار</CardTitle>}
                   </div>
                   <Button
                     onClick={() => setShowAddBlogForm((prev) => !prev)}

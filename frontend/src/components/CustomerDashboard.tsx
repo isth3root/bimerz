@@ -232,9 +232,11 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
     }
   };
 
+  const toPersianDigits = (str: string) => str.replace(/[0-9]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[parseInt(d)]);
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-gradient-to-br from-teal-400 to-green-400 shadow-sm border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -243,7 +245,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
               </div>
               <div>
                 <h1 className="text-lg">پنل مشتری</h1>
-                <p className="text-sm text-gray-600">{customer?.full_name || 'کاربر'}</p>
+                <p className="text-sm text-black">{customer?.full_name || 'کاربر'}</p>
               </div>
             </div>
             <div className="flex items-center">
@@ -274,7 +276,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">بیمه‌نامه‌های فعال</p>
-                  <p className="text-2xl">{insurancePolicies.length}</p>
+                  <p className="text-2xl">{toPersianDigits(insurancePolicies.length.toString())}</p>
                 </div>
                 <FileText className="h-8 w-8 text-green-600" />
               </div>
@@ -285,7 +287,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">اقساط معوق</p>
-                  <p className="text-2xl text-red-600">{stats.overdueCount}</p>
+                  <p className="text-2xl text-red-600">{toPersianDigits(stats.overdueCount.toString())}</p>
                 </div>
                 <CreditCard className="h-8 w-8 text-red-600" />
               </div>
@@ -296,7 +298,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">بیمه های نزدیک به انقضا</p>
-                  <p className="text-2xl text-yellow-600">{stats.nearExpiryPoliciesCount}</p>
+                  <p className="text-2xl text-yellow-600">{toPersianDigits(stats.nearExpiryPoliciesCount.toString())}</p>
                 </div>
                 <Calendar className="h-8 w-8 text-yellow-600" />
               </div>
@@ -345,7 +347,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
           </Card>
         </div>
 
-        <Card className="mb-8">
+        <Card className="mb-8 bg-gradient-to-br from-teal-200 to-green-200">
           <CardHeader>
             <CardTitle>بیمه‌نامه‌های من</CardTitle>
             <CardDescription>لیست بیمه‌نامه‌های فعال و وضعیت آنها</CardDescription>
@@ -372,13 +374,13 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
                         <CardTitle className="text-lg">{policy.type}</CardTitle>
                         <CardDescription>{policy.vehicle}</CardDescription>
                       </CardHeader>
-                      <CardContent>
+                      <CardContent className="flex flex-col justify-between h-full">
                         <div className="space-y-2 text-sm">
                           {policy.payId && (
                             <div className="flex justify-between items-center">
                               <span className="text-gray-600">شناسه پرداخت:</span>
                               <div className="flex items-center gap-1">
-                                <span>{policy.payId}</span>
+                                <span>{toPersianDigits(policy.payId!)}</span>
                                 <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => copyToClipboard(policy.payId!)}>
                                   <Copy className="h-3 w-3" />
                                 </Button>
@@ -387,11 +389,11 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
                           )}
                           <div className="flex justify-between">
                             <span className="text-gray-600">شروع:</span>
-                            <span>{policy.startDate}</span>
+                            <span>{toPersianDigits(policy.startDate)}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">انقضا:</span>
-                            <span>{policy.endDate}</span>
+                            <span>{toPersianDigits(policy.endDate)}</span>
                           </div>
                         </div>
                         <div className="mt-4 flex gap-2">
@@ -451,9 +453,9 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
                 <TableRow>
                   <TableHead className='text-right'>بیمه</TableHead>
                   <TableHead className='text-right'>وضعیت</TableHead>
-                  <TableHead className='text-right'>شماره</TableHead>
                   <TableHead className='text-right'>سررسید</TableHead>
                   <TableHead className='text-right'>مبلغ</TableHead>
+                  <TableHead className='text-right'>شماره</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -466,16 +468,16 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
                     <TableRow key={installment.id}>
                       <TableCell>{installment.policy?.insurance_type || 'N/A'}</TableCell>
                       <TableCell>{getPaymentStatusBadge(installment.status)}</TableCell>
-                      <TableCell>{installment.installment_number}</TableCell>
-                      <TableCell>{installment.due_date}</TableCell>
+                      <TableCell>{toPersianDigits(installment.due_date)}</TableCell>
                       <TableCell>
-                        {parseFloat(installment.amount).toLocaleString('fa-IR')} ریال
+                        {toPersianDigits(parseFloat(installment.amount).toLocaleString('fa-IR'))} ریال
                       </TableCell>
+                      <TableCell>{toPersianDigits(installment.installment_number.toString())}</TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center h-24">
+                    <TableCell colSpan={5} className="text-center h-24">
                       شما هیچ قسط پرداخت نشده‌ای ندارید.
                     </TableCell>
                   </TableRow>
@@ -495,7 +497,6 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className='text-right'>بیمه</TableHead>
                     <TableHead className='text-right'>شماره</TableHead>
                     <TableHead className='text-right'>مبلغ</TableHead>
                     <TableHead className='text-right'>سررسید</TableHead>
@@ -509,16 +510,15 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
                       .sort((a, b) => a.installment_number - b.installment_number)
                       .map((installment) => (
                       <TableRow key={installment.id}>
-                        <TableCell>{installment.policy?.insurance_type || 'N/A'}</TableCell>
-                        <TableCell>{installment.installment_number}</TableCell>
-                        <TableCell>{parseFloat(installment.amount).toLocaleString('fa-IR')} ریال</TableCell>
-                        <TableCell>{installment.due_date}</TableCell>
+                        <TableCell>{toPersianDigits(installment.installment_number.toString())}</TableCell>
+                        <TableCell>{toPersianDigits(parseFloat(installment.amount).toLocaleString('fa-IR'))} ریال</TableCell>
+                        <TableCell>{toPersianDigits(installment.due_date)}</TableCell>
                         <TableCell>{getPaymentStatusBadge(installment.status)}</TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center h-24">
+                      <TableCell colSpan={4} className="text-center h-24">
                         این بیمه‌نامه قسطی نیست یا اقساطی برای آن ثبت نشده است.
                       </TableCell>
                     </TableRow>

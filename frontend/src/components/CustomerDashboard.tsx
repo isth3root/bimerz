@@ -276,7 +276,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">بیمه‌نامه‌های فعال</p>
-                  <p className="text-2xl">{toPersianDigits(insurancePolicies.length.toString())}</p>
+                  <p className="text-2xl">{toPersianDigits(insurancePolicies.filter(p => p.status === 'فعال').length.toString())}</p>
                 </div>
                 <FileText className="h-8 w-8 text-green-600" />
               </div>
@@ -347,6 +347,12 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
           </Card>
         </div>
 
+        <Card className="mb-8 bg-blue-200">
+          <CardContent className="p-4">
+            <p className="text-center text-gray-800 font-medium">وضعیت اقساط پرداخت شده حداکثر ظرف ۷۲ ساعت تایید میگردد</p>
+          </CardContent>
+        </Card>
+
         <Card className="mb-8 bg-gradient-to-br from-teal-200 to-green-200">
           <CardHeader>
             <CardTitle>بیمه‌نامه‌های من</CardTitle>
@@ -360,7 +366,15 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {insurancePolicies.map((policy) => {
+                {insurancePolicies
+                  .sort((a, b) => {
+                    const aExpired = a.status === 'منقضی';
+                    const bExpired = b.status === 'منقضی';
+                    if (aExpired && !bExpired) return 1;
+                    if (!aExpired && bExpired) return -1;
+                    return new Date(b.startDate).getTime() - new Date(a.startDate).getTime();
+                  })
+                  .map((policy) => {
                   const IconComponent = policy.icon;
                   return (
                     <Card key={policy.id} className="border-0 shadow-md">
@@ -436,7 +450,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
                       </CardContent>
                     </Card>
                   );
-                })}
+                  })}
               </div>
             )}
           </CardContent>

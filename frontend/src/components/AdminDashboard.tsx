@@ -43,6 +43,7 @@ import {
 
 import { PriceInput } from "./PriceInput";
 import { Skeleton } from "./ui/skeleton";
+import { Slider } from "./ui/slider";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Blog } from "../hooks/useBlogs";
 
@@ -336,6 +337,16 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [sortField, setSortField] = useState<string>("");
   const [sortState, setSortState] = useState<Record<string, number>>({});
 
+  // Filter states for installments
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000000]); // Default range
+  const [priceMinMax, setPriceMinMax] = useState({min: 0, max: 10000000});
+  const [selectedInsuranceType, setSelectedInsuranceType] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [dateSortOrder, setDateSortOrder] = useState<string>("none"); // "none" | "newest" | "oldest"
+
+  const [policySortField, setPolicySortField] = useState<string>("");
+  const [policySortState, setPolicySortState] = useState<Record<string, number>>({});
+
   const [blogSearchQuery, setBlogSearchQuery] = useState("");
   const [editingBlog, setEditingBlog] = useState<Blog | null>(null);
   const [formDataBlog, setFormDataBlog] = useState({
@@ -559,6 +570,16 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
             };
           });
           setInstallments(processedInstallments);
+
+          // Set initial price range
+          if (processedInstallments.length > 0) {
+            const amounts = processedInstallments.map(i => parseFloat(i.amount.replace(/,/g, '')));
+            const minAmount = Math.min(...amounts);
+            const maxAmount = Math.max(...amounts);
+            setPriceMinMax({min: minAmount, max: maxAmount});
+            setPriceRange([minAmount, maxAmount]);
+          }
+
           setLoadingInstallments(false);
       } catch (error) {
         console.error('Error fetching installments:', error);
@@ -617,15 +638,39 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedCustomers = filteredCustomers.slice(startIndex, startIndex + itemsPerPage);
 
+  const getPolicySortValue = (field: string, item: Policy) => {
+    if (field === 'startDate') {
+      return moment(item.startDate, "jYYYY/jMM/jDD").valueOf();
+    } else if (field === 'policyNumber') {
+      return item.policyNumber || '';
+    } else {
+      return item[field as keyof Policy] as string;
+    }
+  };
+
   const filteredPolicies = policies.filter(
     (policy) =>
-      policy.id.includes(policySearchQuery) ||
+      (policy.policyNumber && policy.policyNumber.includes(policySearchQuery)) ||
       policy.customerName.toLowerCase().includes(policySearchQuery.toLowerCase())
   );
 
-  const totalPagesPolicies = Math.ceil(filteredPolicies.length / itemsPerPagePolicies);
+  const sortedPolicies = [...filteredPolicies].sort((a, b) => {
+    if (!policySortField) return 0;
+    const aVal = getPolicySortValue(policySortField, a);
+    const bVal = getPolicySortValue(policySortField, b);
+    let cmp = 0;
+    if (typeof aVal === 'number' && typeof bVal === 'number') {
+      cmp = aVal - bVal;
+    } else {
+      cmp = String(aVal).localeCompare(String(bVal));
+    }
+    const mode = policySortState[policySortField] || 0;
+    return mode === 0 ? cmp : -cmp; // 0: asc, 1: desc
+  });
+
+  const totalPagesPolicies = Math.ceil(sortedPolicies.length / itemsPerPagePolicies);
   const startIndexPolicies = (currentPagePolicies - 1) * itemsPerPagePolicies;
-  const paginatedPolicies = filteredPolicies.slice(startIndexPolicies, startIndexPolicies + itemsPerPagePolicies);
+  const paginatedPolicies = sortedPolicies.slice(startIndexPolicies, startIndexPolicies + itemsPerPagePolicies);
 
   const handleAddCustomer = async () => {
     if (!formData.name.trim() || !formData.nationalCode.trim() || !formData.phone.trim()) {
@@ -1128,11 +1173,21 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   };
 
   const filteredInstallments = installments.filter(
-    (i) =>
-      i.customerName
-        .toLowerCase()
-        .includes(installmentSearchQuery.toLowerCase()) ||
-      i.policyType.toLowerCase().includes(installmentSearchQuery.toLowerCase())
+    (i) => {
+      const matchesSearch =
+        i.customerName
+          .toLowerCase()
+          .includes(installmentSearchQuery.toLowerCase()) ||
+        i.policyType.toLowerCase().includes(installmentSearchQuery.toLowerCase());
+
+      const matchesPrice = parseFloat(i.amount.replace(/,/g, '')) >= priceRange[0] && parseFloat(i.amount.replace(/,/g, '')) <= priceRange[1];
+
+      const matchesType = selectedInsuranceType === "all" || i.policyType === selectedInsuranceType;
+
+      const matchesStatus = selectedStatus === "all" || i.status === selectedStatus;
+
+      return matchesSearch && matchesPrice && matchesType && matchesStatus;
+    }
   );
 
   const handleSort = (field: string) => {
@@ -1145,6 +1200,20 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
         else if (newState[field] > 1) newState[field] = 0;
       } else {
         setSortField(field);
+        newState[field] = 0;
+      }
+      return newState;
+    });
+  };
+
+  const handlePolicySort = (field: string) => {
+    setPolicySortState(prev => {
+      const newState = { ...prev };
+      if (policySortField === field) {
+        newState[field] = (newState[field] || 0) + 1;
+        if (newState[field] > 1) newState[field] = 0;
+      } else {
+        setPolicySortField(field);
         newState[field] = 0;
       }
       return newState;
@@ -1170,6 +1239,18 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   };
 
   const sortedInstallments = [...filteredInstallments].sort((a, b) => {
+    // First apply date sort if selected
+    if (dateSortOrder !== 'none') {
+      const aDate = moment(a.dueDate, "jYYYY/jMM/jDD").valueOf();
+      const bDate = moment(b.dueDate, "jYYYY/jMM/jDD").valueOf();
+      if (dateSortOrder === 'newest') {
+        return bDate - aDate; // newest first
+      } else if (dateSortOrder === 'oldest') {
+        return aDate - bDate; // oldest first
+      }
+    }
+
+    // Then apply table sort
     if (!sortField) return 0;
     const aVal = getSortValue(sortField, a);
     const bVal = getSortValue(sortField, b);
@@ -2496,11 +2577,11 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                        <TableHead className="text-right">تعداد اقساط</TableHead>
                        <TableHead className="text-right">حق بیمه</TableHead>
                        <TableHead className="text-right">تاریخ انقضا</TableHead>
-                       <TableHead className="text-right">تاریخ شروع</TableHead>
+                       <TableHead onClick={() => handlePolicySort("startDate")} className="cursor-pointer hover:bg-gray-50 text-right">تاریخ شروع</TableHead>
                        <TableHead className="text-right">جزییات بیمه</TableHead>
                        <TableHead className="text-right">نوع بیمه</TableHead>
                        <TableHead className="text-right">نام مشتری</TableHead>
-                       <TableHead className="text-right">شماره بیمه‌نامه</TableHead>
+                       <TableHead onClick={() => handlePolicySort("policyNumber")} className="cursor-pointer hover:bg-gray-50 text-right">شماره بیمه‌نامه</TableHead>
                      </TableRow>
                    </TableHeader>
                   <TableBody>
@@ -2837,6 +2918,77 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                     </motion.div>
                   )}
                 </AnimatePresence>
+
+                {/* Filter Section */}
+                <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
+                  <h3 className="text-lg font-semibold mb-4 text-right">فیلترها</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    {/* Price Range Slider */}
+                    <div className="space-y-2">
+                      <Label className="text-right block">محدوده مبلغ قسط (ریال)</Label>
+                      <Slider
+                        value={priceRange}
+                        onValueChange={(value) => setPriceRange(value as [number, number])}
+                        max={priceMinMax.max}
+                        min={priceMinMax.min}
+                        step={100000}
+                        className="w-full"
+                      />
+                      <div className="flex justify-between text-sm text-black">
+                        <span>{toPersianDigits(formatPrice(priceRange[0].toString()))}</span>
+                        <span>{toPersianDigits(formatPrice(priceRange[1].toString()))}</span>
+                      </div>
+                    </div>
+
+                    {/* Insurance Type Select */}
+                    <div className="space-y-2">
+                      <Label className="text-right block">نوع بیمه</Label>
+                      <Select value={selectedInsuranceType} onValueChange={setSelectedInsuranceType}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="انتخاب نوع بیمه" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">همه</SelectItem>
+                          {Array.from(new Set(installments.map(i => i.policyType))).map(type => (
+                            <SelectItem key={type} value={type}>{type}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Status Select */}
+                    <div className="space-y-2">
+                      <Label className="text-right block">وضعیت</Label>
+                      <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="انتخاب وضعیت" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">همه</SelectItem>
+                          <SelectItem value="معوق">معوق</SelectItem>
+                          <SelectItem value="آینده">آینده</SelectItem>
+                          <SelectItem value="پرداخت شده">پرداخت شده</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Date Sort */}
+                    <div className="space-y-2">
+                      <Label className="text-right block">مرتب‌سازی بر اساس سررسید</Label>
+                      <Select value={dateSortOrder} onValueChange={setDateSortOrder}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="انتخاب مرتب‌سازی" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">بدون مرتب‌سازی</SelectItem>
+                          <SelectItem value="newest">جدیدترین</SelectItem>
+                          <SelectItem value="oldest">قدیمی‌ترین</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="mb-4">
                   <div className="relative">
                     <Search className="absolute right-3 top-3 h-4 w-4 text-gray-400" />

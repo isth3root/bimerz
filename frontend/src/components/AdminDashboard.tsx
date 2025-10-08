@@ -1445,7 +1445,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-gradient-to-br from-teal-400 to-green-400 shadow-sm border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -1472,7 +1472,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
             <div className="flex items-center gap-3">
               {userRole === 'admin' && (
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={async () => {
                     try {
@@ -1728,7 +1728,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
           onValueChange={setActiveTab}
           className="space-y-6"
         >
-          <TabsList className={`relative grid w-full ${cols === 1 ? 'grid-cols-1' : cols === 2 ? 'grid-cols-2' : cols === 3 ? 'grid-cols-3' : 'grid-cols-4'} bg-gray-100 p-1 rounded-lg`}>
+          <TabsList className={`relative grid w-full ${cols === 1 ? 'grid-cols-1' : cols === 2 ? 'grid-cols-2' : cols === 3 ? 'grid-cols-3' : 'grid-cols-4'} p-1 rounded-lg`}>
             <motion.div
               className="absolute top-1 bottom-1 bg-white rounded-md shadow-sm"
               style={{ width: `calc(${100/cols}% - 4px)` }}
@@ -1767,7 +1767,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
           {/* Customers Management */}
           <TabsContent value="customers">
-            <Card>
+            <Card className="shadow-green-100 shadow-xl ring-2 ring-green-200">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
@@ -2145,7 +2145,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
           {/* Policies Management */}
           <TabsContent value="policies">
-            <Card>
+            <Card className="shadow-green-100 shadow-xl ring-2 ring-green-200">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
@@ -2581,7 +2581,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                        <TableHead className="text-right">جزییات بیمه</TableHead>
                        <TableHead className="text-right">نوع بیمه</TableHead>
                        <TableHead className="text-right">نام مشتری</TableHead>
-                       <TableHead onClick={() => handlePolicySort("policyNumber")} className="cursor-pointer hover:bg-gray-50 text-right">شماره بیمه‌نامه</TableHead>
+                       <TableHead onClick={() => handlePolicySort("policyNumber")} className="cursor-pointer hover:bg-gray-50 text-right">شماره</TableHead>
                      </TableRow>
                    </TableHeader>
                   <TableBody>
@@ -2690,7 +2690,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
           {/* Installments Management */}
           <TabsContent value="installments">
-            <Card>
+            <Card className="shadow-green-100 shadow-xl ring-2 ring-green-200">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   {loadingInstallments ? <Skeleton className="h-6 w-24" /> : <CardTitle>مدیریت اقساط</CardTitle>}
@@ -3154,7 +3154,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
           {/* Blogs Management */}
           <TabsContent value="blogs">
-            <Card>
+            <Card className="shadow-green-100 shadow-xl ring-2 ring-green-200">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>

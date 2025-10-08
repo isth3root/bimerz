@@ -52,6 +52,7 @@ interface RawPolicy {
   payment_type: string;
   payment_id: string | null;
   payment_link: string | null;
+  pdf_path: string | null;
 }
 
 interface Policy {
@@ -67,6 +68,7 @@ interface Policy {
   isInstallment: boolean;
   payId: string | undefined;
   payLink: string | undefined;
+  hasPdf: boolean;
 }
 
 interface RawInstallment {
@@ -150,6 +152,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
             isInstallment: p.payment_type === 'اقساطی',
             payId: p.payment_id,
             payLink: p.payment_link,
+            hasPdf: !!p.pdf_path,
           };
         });
         nearExpiryPoliciesCount = policies.filter(p => p.status === 'نزدیک انقضا').length;
@@ -346,13 +349,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
             </CardContent>
           </Card>
         </div>
-
-        <Card className="mb-8 bg-blue-200">
-          <CardContent className="p-4">
-            <p className="text-center text-gray-800 font-medium">وضعیت اقساط پرداخت شده حداکثر ظرف ۷۲ ساعت تایید میگردد</p>
-          </CardContent>
-        </Card>
-
+            <p className="text-center text-red-600 font-bold py-10">وضعیت اقساط پرداخت شده حداکثر ظرف ۷۲ ساعت تایید میگردد</p>
         <Card className="mb-8 bg-gradient-to-br from-teal-200 to-green-200">
           <CardHeader>
             <CardTitle>بیمه‌نامه‌های من</CardTitle>
@@ -411,39 +408,43 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
                           </div>
                         </div>
                         <div className="mt-4 flex gap-2">
-                          <Button size="sm" variant="outline" className={policy.isInstallment ? "flex-1" : "w-full"} onClick={async () => {
-                            try {
-                              const response = await api.get(`/customer/policies/${policy.id}/download`, {
-                                headers: { Authorization: `Bearer ${token}` },
-                                responseType: 'blob',
-                              });
-                              const blob = response.data;
-                              const url = window.URL.createObjectURL(blob);
-                              const a = document.createElement('a');
-                              a.href = url;
-                              a.download = `policy-${policy.id}.pdf`;
-                              a.click();
-                              window.URL.revokeObjectURL(url);
-                            } catch (error) {
-                              console.error(error)
-                              toast.error('خطا در دانلود فایل');
-                            }
-                          }}>
-                            {/* <Download className="h-4 w-4" /> */}
-                            دانلود بیمه نامه
-                          </Button>
+                          {policy.hasPdf && (
+                            <Button size="sm" variant="outline" className={policy.isInstallment ? "flex-1" : "w-full"} onClick={async () => {
+                              try {
+                                const response = await api.get(`/customer/policies/${policy.id}/download`, {
+                                  headers: { Authorization: `Bearer ${token}` },
+                                  responseType: 'blob',
+                                });
+                                const blob = response.data;
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `policy-${policy.id}.pdf`;
+                                a.click();
+                                window.URL.revokeObjectURL(url);
+                              } catch (error) {
+                                console.error(error)
+                                toast.error('خطا در دانلود فایل');
+                              }
+                            }}>
+                              {/* <Download className="h-4 w-4" /> */}
+                              دانلود بیمه نامه
+                            </Button>
+                          )}
                           {policy.isInstallment && (
                             <>
-                              <Button size="sm" variant="outline" className="flex-1" onClick={() => {
+                              <Button size="sm" variant="outline" className={policy.payLink ? "flex-1" : "w-full"} onClick={() => {
                                 setSelectedPolicy(policy);
                                 setShowInstallmentsDialog(true);
                               }}>
                                 اقساط
                               </Button>
-                              <Button size="sm" className="flex-1" onClick={() => handlePayLink(policy.payLink)}>
-                                {/* <CreditCard className="h-4 w-4 ml-2" /> */}
-                                پرداخت
-                              </Button>
+                              {policy.payLink && (
+                                <Button size="sm" className="flex-1" onClick={() => handlePayLink(policy.payLink)}>
+                                  {/* <CreditCard className="h-4 w-4 ml-2" /> */}
+                                  پرداخت
+                                </Button>
+                              )}
                             </>
                           )}
                         </div>

@@ -642,7 +642,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
     if (field === 'startDate') {
       return moment(item.startDate, "jYYYY/jMM/jDD").valueOf();
     } else if (field === 'policyNumber') {
-      return item.policyNumber || '';
+      return parseInt(item.policyNumber || '0', 10);
     } else {
       return item[field as keyof Policy] as string;
     }

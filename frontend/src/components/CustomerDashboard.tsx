@@ -457,7 +457,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
           </CardContent>
         </Card>
 
-        <Card className="mb-8">
+        <Card className="mb-8 shadow-green-100 shadow-xl ring-2 ring-green-200">
           <CardHeader>
             <CardTitle>اقساط</CardTitle>
             <CardDescription>لیست تمام اقساط پرداخت نشده</CardDescription>

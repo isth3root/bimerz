@@ -1,7 +1,8 @@
+import { memo } from "react";
 import { Separator } from "./ui/separator";
 import { Phone, MapPin } from "lucide-react";
 
-export function Footer() {
+const Footer = () => {
   return (
     <footer className="bg-gradient-to-br from-teal-400 to-green-400">
       {/* Main footer content */}
@@ -75,4 +76,6 @@ export function Footer() {
       </div>
     </footer>
   );
-}
+};
+
+export default memo(Footer);

@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Header } from './Header';
-import { Footer } from './Footer';
+import Header from './Header';
+import Footer from './Footer';
 import { SearchX } from 'lucide-react';
 
 export function NotFound() {

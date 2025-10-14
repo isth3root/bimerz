@@ -5,7 +5,7 @@ import { Calendar, ArrowRight } from "lucide-react";
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { useBlogs } from '../hooks/useBlogs';
 
-export function BlogDetail() {
+export default function BlogDetail() {
   const { id } = useParams<{ id: string }>();
   const { blogs } = useBlogs();
   const navigate = useNavigate();

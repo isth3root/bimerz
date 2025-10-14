@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { Menu, User, Gem } from "lucide-react";
@@ -8,7 +8,7 @@ interface HeaderProps {
   currentPage: string;
 }
 
-export function Header({ onNavigate, currentPage }: HeaderProps) {
+const Header = ({ onNavigate, currentPage }: HeaderProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -48,32 +48,37 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
             <button
               onClick={() => onNavigate('/')}
               className={`cursor-pointer transition-colors ${currentPage === 'home' ? 'text-green-600 font-semibold' : 'text-gray-700 hover:text-green-600'}`}
+              aria-current={currentPage === 'home' ? 'page' : undefined}
             >
               صفحه اصلی
             </button>
             <button
               onClick={() => onNavigate('/yaqut-alborz')}
               className={`group cursor-pointer transition-colors ${currentPage === 'yaqut-alborz' ? 'text-green-600 font-semibold' : 'text-gray-700 hover:text-green-600'}`}
+              aria-current={currentPage === 'yaqut-alborz' ? 'page' : undefined}
             >
               <Gem className="h-4 w-4 mr-2 inline group-hover:brightness-150 group-hover:drop-shadow-xl group-hover:scale-125 transition-all duration-300 mx-1" />
               یاقوت البرز
             </button>
-            
+
             <button
               onClick={() => onNavigate('/blogs')}
               className={`cursor-pointer transition-colors ${currentPage === 'blogs' ? 'text-green-600 font-semibold' : 'text-gray-700 hover:text-green-600'}`}
+              aria-current={currentPage === 'blogs' ? 'page' : undefined}
             >
               اخبار
             </button>
             <button
               onClick={() => onNavigate('rules')}
               className={`cursor-pointer transition-colors ${currentPage === 'rules' ? 'text-green-600 font-semibold' : 'text-gray-700 hover:text-green-600'}`}
+              aria-current={currentPage === 'rules' ? 'page' : undefined}
             >
               قوانین بیمه
             </button>
             <button
               onClick={() => onNavigate('/about')}
               className={`cursor-pointer transition-colors ${currentPage === 'about' ? 'text-green-600 font-semibold' : 'text-gray-700 hover:text-green-600'}`}
+              aria-current={currentPage === 'about' ? 'page' : undefined}
             >
               درباره ما
             </button>
@@ -125,4 +130,6 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
       </div>
     </header>
   );
-}
+};
+
+export default memo(Header);

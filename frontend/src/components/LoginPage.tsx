@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import api from '../utils/api';
 
 interface LoginPageProps {
-  onLogin: (userType: 'customer' | 'admin' | 'admin-2' | 'admin-3') => void;
+  onLogin: (data: { access_token: string; username: string; role: 'customer' | 'admin' | 'admin-2' | 'admin-3' }) => void;
   onNavigate: (page: string) => void;
 }
 
@@ -18,14 +18,33 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
   const [insuranceCode, setInsuranceCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState<{ nationalCode?: string; insuranceCode?: string }>({});
 
   const persianToEnglish = (str: string): string => {
     const persianNumbers = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
     return str.replace(/[۰-۹]/g, (char) => persianNumbers.indexOf(char).toString());
   };
 
+  const validateForm = () => {
+    const newErrors: { nationalCode?: string; insuranceCode?: string } = {};
+    const cleanedNationalCode = persianToEnglish(nationalCode).trim();
+    if (!cleanedNationalCode) {
+      newErrors.nationalCode = 'نام کاربری الزامی است';
+    } else if (/^\d+$/.test(cleanedNationalCode) && cleanedNationalCode.length !== 10) {
+      newErrors.nationalCode = 'کد ملی باید ۱۰ رقم باشد';
+    } else if (!/^[a-zA-Z0-9]+$/.test(cleanedNationalCode)) {
+      newErrors.nationalCode = 'نام کاربری فقط شامل حروف و اعداد انگلیسی باشد';
+    }
+    if (!insuranceCode.trim()) {
+      newErrors.insuranceCode = 'رمز عبور الزامی است';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) return;
     setIsLoading(true);
 
     try {
@@ -34,11 +53,9 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
         password: persianToEnglish(insuranceCode),
       });
       const data = response.data;
-      localStorage.setItem('token', data.access_token);
-      localStorage.setItem('userId', data.username);
-      localStorage.setItem('role', data.role);
       toast.success('ورود موفق');
-      onLogin(data.role);
+      setErrors({});
+      onLogin(data);
     } catch (error: unknown) {
       console.error('Login error:', error);
       const axiosError = error as { response?: { status: number } };
@@ -85,9 +102,12 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
                   maxLength={10}
                   required
                   className="text-right"
+                  aria-invalid={!!errors.nationalCode}
+                  aria-describedby={errors.nationalCode ? "nationalCode-error" : undefined}
                 />
+                {errors.nationalCode && <p id="nationalCode-error" className="text-red-500 text-sm">{errors.nationalCode}</p>}
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="insuranceCode">رمزعبور</Label>
                 <div className="relative">
@@ -99,15 +119,19 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
                     onChange={(e) => setInsuranceCode(e.target.value)}
                     required
                     className="text-right"
+                    aria-invalid={!!errors.insuranceCode}
+                    aria-describedby={errors.insuranceCode ? "insuranceCode-error" : undefined}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+                {errors.insuranceCode && <p id="insuranceCode-error" className="text-red-500 text-sm">{errors.insuranceCode}</p>}
               </div>
 
               <Button 

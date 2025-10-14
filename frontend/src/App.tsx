@@ -1,23 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Toaster } from "sonner";
-import { Header } from './components/Header';
 import { BlogSection } from './components/BlogSection';
 import RulesSection from './components/RulesSection';
 import { FAQSection } from './components/FAQSection';
-import { Footer } from './components/Footer';
 import { LoginPage } from './components/LoginPage';
 import { CustomerDashboard } from './components/CustomerDashboard';
 import { AdminDashboard } from './components/AdminDashboard';
 import { AboutUs } from './components/AboutUs';
 import { NotFound } from './components/NotFound';
-import { Blogs } from './components/Blogs';
-import { BlogDetail } from './components/BlogDetail';
 import { OnlineDamage } from './components/OnlineDamage';
 import { YaqutAlborz } from './components/YaqutAlborz';
 
-type UserType = 'customer' | 'admin' | 'admin-2' | 'admin-3' | null;
+const Blogs = lazy(() => import('./components/Blogs'));
+const BlogDetail = lazy(() => import('./components/BlogDetail'));
+import { Layout } from './components/Layout';
+import { useAuth } from './contexts/AuthContext';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -30,10 +29,7 @@ function ScrollToTop() {
 }
 
 function AppContent() {
-  const [userType, setUserType] = useState<UserType>(() => {
-    const saved = localStorage.getItem('userType');
-    return saved as UserType || null;
-  });
+  const { userType, login, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -56,15 +52,13 @@ function AppContent() {
     }
   };
 
-  const handleLogin = (type: 'customer' | 'admin' | 'admin-2' | 'admin-3') => {
-    setUserType(type);
-    localStorage.setItem('userType', type);
-    navigate(type === 'customer' ? '/customer-dashboard' : '/admin-dashboard');
+  const handleLogin = (data: { access_token: string; username: string; role: 'customer' | 'admin' | 'admin-2' | 'admin-3' }) => {
+    login(data);
+    navigate(data.role === 'customer' ? '/customer-dashboard' : '/admin-dashboard');
   };
 
   const handleLogout = () => {
-    setUserType(null);
-    localStorage.removeItem('userType');
+    logout();
     navigate('/');
   };
 
@@ -74,10 +68,10 @@ function AppContent() {
     <>
       <Toaster position="top-center" />
       <ScrollToTop />
-      <Routes>
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center">در حال بارگذاری...</div>}>
+        <Routes>
       <Route path="/" element={
-        <div className="min-h-screen bg-white">
-          <Header onNavigate={handleNavigate} currentPage={currentPage} />
+        <Layout onNavigate={handleNavigate} currentPage={currentPage}>
           <OnlineDamage onNavigate={handleNavigate} />
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -104,8 +98,7 @@ function AppContent() {
           >
             <FAQSection />
           </motion.div>
-          <Footer />
-        </div>
+        </Layout>
       } />
       <Route path="/login" element={<LoginPage onLogin={handleLogin} onNavigate={handleNavigate} />} />
       <Route path="/customer-dashboard" element={
@@ -115,22 +108,17 @@ function AppContent() {
         userType && userType !== 'customer' ? <AdminDashboard onLogout={handleLogout} /> : <NotFound />
       } />
       <Route path="/about" element={
-        <div className="min-h-screen bg-white">
-          <Header onNavigate={handleNavigate} currentPage={currentPage} />
+        <Layout onNavigate={handleNavigate} currentPage={currentPage}>
           <AboutUs />
-          <Footer />
-        </div>
+        </Layout>
       } />
       <Route path="/yaqut-alborz" element={
-        <div className="min-h-screen bg-white">
-          <Header onNavigate={handleNavigate} currentPage={currentPage} />
+        <Layout onNavigate={handleNavigate} currentPage={currentPage}>
           <YaqutAlborz />
-          <Footer />
-        </div>
+        </Layout>
       } />
       <Route path="/blogs" element={
-        <div className="min-h-screen bg-white">
-          <Header onNavigate={handleNavigate} currentPage={currentPage} />
+        <Layout onNavigate={handleNavigate} currentPage={currentPage}>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -138,12 +126,10 @@ function AppContent() {
           >
             <Blogs />
           </motion.div>
-          <Footer />
-        </div>
+        </Layout>
       } />
       <Route path="/blogs/:id" element={
-        <div className="min-h-screen bg-white">
-          <Header onNavigate={handleNavigate} currentPage={currentPage} />
+        <Layout onNavigate={handleNavigate} currentPage={currentPage}>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -151,13 +137,13 @@ function AppContent() {
           >
             <BlogDetail />
           </motion.div>
-          <Footer />
-        </div>
+        </Layout>
       } />
       <Route path="*" element={<NotFound />} />
     </Routes>
-   </>
-  );
+    </Suspense>
+  </>
+);
 }
 
 export default function App() {

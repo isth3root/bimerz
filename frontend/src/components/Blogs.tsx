@@ -5,7 +5,7 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 import { useBlogs } from '../hooks/useBlogs';
 import { useNavigate } from 'react-router-dom';
 
-export function Blogs() {
+export default function Blogs() {
   const { blogs } = useBlogs();
   const navigate = useNavigate();
 

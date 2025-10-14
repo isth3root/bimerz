@@ -433,7 +433,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
                           )}
                           {policy.isInstallment && (
                             <>
-                              <Button size="sm" variant="outline" className={policy.payLink ? "flex-1" : "w-full"} onClick={() => {
+                              <Button size="sm" variant="outline" className={policy.payLink ? "flex-1" : "flex-1"} onClick={() => {
                                 setSelectedPolicy(policy);
                                 setShowInstallmentsDialog(true);
                               }}>

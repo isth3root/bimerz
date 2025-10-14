@@ -685,8 +685,8 @@ export function InstallmentsTab({ installments, setInstallments, loading, token 
                 >
                   وضعیت
                 </TableHead>
-                <TableHead className="text-right">روز تاخیر</TableHead>
                 <TableHead className="text-right">شماره قسط</TableHead>
+                <TableHead className="text-right">روز تاخیر</TableHead>
                 <TableHead
                   onClick={() => handleSort("dueDate")}
                   className="cursor-pointer hover:bg-gray-50 text-right"
@@ -794,6 +794,7 @@ export function InstallmentsTab({ installments, setInstallments, loading, token 
                         )}
                       </div>
                     </TableCell>
+                    <TableCell>{toPersianDigits(installment.installment_number.toString())}</TableCell>
                     <TableCell>
                       {installment.status === 'پرداخت شده' ? (
                         "-"
@@ -805,7 +806,6 @@ export function InstallmentsTab({ installments, setInstallments, loading, token 
                         "-"
                       )}
                     </TableCell>
-                    <TableCell>{toPersianDigits(installment.installment_number.toString())}</TableCell>
                     <TableCell>{installment.dueDate}</TableCell>
                     <TableCell>{toPersianDigits(formatPrice(installment.amount))}</TableCell>
                     <TableCell>{installment.policyType}</TableCell>

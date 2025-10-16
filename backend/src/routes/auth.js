@@ -47,8 +47,8 @@ router.post('/login', localAuth, async (req, res) => {
     const result = await authService.login(req.user);
     res.cookie('token', result.access_token, {
       httpOnly: true,
-      secure: true,
-      sameSite: 'none',
+      secure: false,
+      sameSite: 'lax',
       maxAge: req.user.role === 'admin' ? 15 * 24 * 60 * 60 * 1000 : 30 * 24 * 60 * 60 * 1000,
     });
     res.json({ username: req.user.national_code, role: req.user.role });
@@ -117,8 +117,8 @@ router.post('/verify-2fa', async (req, res) => {
     const result = await authService.login(customer);
     res.cookie('token', result.access_token, {
       httpOnly: true,
-      secure: true,
-      sameSite: 'none',
+      secure: false,
+      sameSite: 'lax',
       maxAge: customer.role === 'admin' ? 15 * 24 * 60 * 60 * 1000 : 30 * 24 * 60 * 60 * 1000,
     });
     res.json({ username: customer.national_code, role: customer.role });

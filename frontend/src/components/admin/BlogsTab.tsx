@@ -48,11 +48,12 @@ interface BlogAPI {
 interface BlogsTabProps {
   blogs: Blog[];
   setBlogs: React.Dispatch<React.SetStateAction<Blog[]>>;
-  loading: boolean;
+  loadingBlogs: boolean;
   token: string;
+  onLogout: () => void;
 }
 
-export function BlogsTab({ blogs, setBlogs, loading, token }: BlogsTabProps) {
+export function BlogsTab({ blogs, setBlogs, loadingBlogs, token }: BlogsTabProps) {
   const [editingBlog, setEditingBlog] = useState<Blog | null>(null);
   const [formDataBlog, setFormDataBlog] = useState({
     title: "",
@@ -205,7 +206,7 @@ export function BlogsTab({ blogs, setBlogs, loading, token }: BlogsTabProps) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              {loading ? <Skeleton className="h-6 w-24" /> : <CardTitle>مدیریت اخبار</CardTitle>}
+              {loadingBlogs ? <Skeleton className="h-6 w-24" /> : <CardTitle>مدیریت اخبار</CardTitle>}
             </div>
             <Button
               onClick={() => setShowAddBlogForm((prev) => !prev)}
@@ -384,7 +385,7 @@ export function BlogsTab({ blogs, setBlogs, loading, token }: BlogsTabProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading ? (
+              {loadingBlogs ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
                     <TableCell><Skeleton className="h-8 w-16" /></TableCell>

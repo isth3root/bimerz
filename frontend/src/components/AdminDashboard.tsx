@@ -1,5 +1,10 @@
 import { useState, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { Checkbox } from "./ui/checkbox";
+import { Button } from "./ui/button";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "./ui/input-otp";
 import { motion } from "framer-motion";
 import type { Blog } from "../hooks/useBlogs";
 import { CustomersTab } from "./admin/CustomersTab";
@@ -8,7 +13,8 @@ import { InstallmentsTab } from "./admin/InstallmentsTab";
 import { BlogsTab } from "./admin/BlogsTab";
 import api from '../utils/api';
 import moment from "moment-jalaali";
-import { User, FileText, CreditCard, Calendar } from "lucide-react"
+import { User, FileText, CreditCard, Calendar, Download, Upload } from "lucide-react"
+import { toast } from "sonner";
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -139,6 +145,101 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
     nearExpiryPoliciesCount: 0,
     nearExpiryInstallmentsCount: 0,
   });
+  const [showBackupPopoverDesktop, setShowBackupPopoverDesktop] = useState(false);
+  const [showBackupPopoverMobile, setShowBackupPopoverMobile] = useState(false);
+  const [showTotpModal, setShowTotpModal] = useState(false);
+  const [showRestoreModal, setShowRestoreModal] = useState(false);
+  const [backupFilters, setBackupFilters] = useState({
+    customers: true,
+    policies: true,
+    installments: true,
+    blogs: true,
+  });
+  const [totpCode, setTotpCode] = useState('');
+  const [restoreFile, setRestoreFile] = useState<File | null>(null);
+  const [restoreTotpCode, setRestoreTotpCode] = useState('');
+  const [restoreLoading, setRestoreLoading] = useState(false);
+
+  const handleBackupClick = () => {
+    setShowTotpModal(true);
+  };
+
+  const handleRestore = async () => {
+    if (!restoreFile || !restoreTotpCode.trim()) {
+      toast.error('لطفا فایل پشتیبان و کد TOTP را وارد کنید');
+      return;
+    }
+
+    setRestoreLoading(true);
+    try {
+      const fileText = await restoreFile.text();
+      const backupData = JSON.parse(fileText);
+
+      await api.post('/admin/restore', {
+        backup_data: backupData,
+        totp_code: restoreTotpCode,
+      });
+
+      toast.success('بازیابی داده‌ها با موفقیت انجام شد');
+      setShowRestoreModal(false);
+      setRestoreTotpCode('');
+      setRestoreFile(null);
+
+      // Refresh the page to show restored data
+      window.location.reload();
+    } catch (error: unknown) {
+      console.error('Restore error:', error);
+      const axiosError = error as { response?: { status: number } };
+      if (axiosError.response?.status === 401) {
+        toast.error('کد TOTP نامعتبر است');
+      } else {
+        toast.error('خطا در بازیابی داده‌ها');
+      }
+    } finally {
+      setRestoreLoading(false);
+    }
+  };
+
+  const handleTotpSubmit = async () => {
+    if (!totpCode.trim()) {
+      toast.error('کد TOTP الزامی است');
+      return;
+    }
+
+    try {
+      // Proceed with backup including TOTP code
+      const response = await api.post('/admin/backup', {
+        ...backupFilters,
+        totp_code: totpCode,
+      }, {
+        responseType: 'blob',
+      });
+
+      const blob = new Blob([response.data], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'backup.json';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('پشتیبان‌گیری با موفقیت انجام شد');
+      setShowTotpModal(false);
+      setTotpCode('');
+      setShowBackupPopoverDesktop(false);
+      setShowBackupPopoverMobile(false);
+    } catch (error: unknown) {
+      console.error('Backup error:', error);
+      const axiosError = error as { response?: { status: number } };
+      if (axiosError.response?.status === 401) {
+        toast.error('کد TOTP نامعتبر است');
+      } else {
+        toast.error('خطا در پشتیبان‌گیری');
+      }
+    }
+  };
 
   const [activeTab, setActiveTab] = useState(() => {
     const role = localStorage.getItem('role') || 'admin';
@@ -150,8 +251,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const userRole = localStorage.getItem('role') || 'admin';
   const visibleTabs = userRole === 'admin' ? ['customers', 'policies', 'installments', 'blogs'] :
     userRole === 'admin-2' ? ['installments', 'blogs'] :
-    userRole === 'admin-3' ? ['blogs'] :
-    ['customers', 'policies', 'installments', 'blogs'];
+      userRole === 'admin-3' ? ['blogs'] :
+        ['customers', 'policies', 'installments', 'blogs'];
   const cols = visibleTabs.length;
   const tabIndex = visibleTabs.indexOf(activeTab);
 
@@ -297,34 +398,34 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
           console.error('Expected array for installments data');
           return;
         }
-          const now = moment();
-          const processedInstallments = data.map((i: InstallmentAPI) => {
-            const dueDateMoment = moment(i.due_date, "jYYYY/jMM/jDD");
-            let status = i.status;
-            if (status !== 'پرداخت شده') {
-              if (dueDateMoment.isBefore(now)) {
-                status = "معوق";
-              } else {
-                status = "آینده";
-              }
+        const now = moment();
+        const processedInstallments = data.map((i: InstallmentAPI) => {
+          const dueDateMoment = moment(i.due_date, "jYYYY/jMM/jDD");
+          let status = i.status;
+          if (status !== 'پرداخت شده') {
+            if (dueDateMoment.isBefore(now)) {
+              status = "معوق";
+            } else {
+              status = "آینده";
             }
-            const daysOverdue = status === 'معوق' ? now.diff(dueDateMoment, 'days') : 0;
+          }
+          const daysOverdue = status === 'معوق' ? now.diff(dueDateMoment, 'days') : 0;
 
-            return {
-              id: i.id.toString(),
-              customerName: i.customer ? i.customer.full_name : 'Unknown',
-              policyType: i.policy ? i.policy.insurance_type : 'Unknown',
-              amount: i.amount.toString(),
-              dueDate: i.due_date,
-              status,
-              daysOverdue,
-              installment_number: i.installment_number,
-              payLink: i.pay_link || '',
-              customerNationalCode: i.customer ? i.customer.national_code : '',
-            };
-          });
-          setInstallments(processedInstallments);
-          setLoadingInstallments(false);
+          return {
+            id: i.id.toString(),
+            customerName: i.customer ? i.customer.full_name : 'Unknown',
+            policyType: i.policy ? i.policy.insurance_type : 'Unknown',
+            amount: i.amount.toString(),
+            dueDate: i.due_date,
+            status,
+            daysOverdue,
+            installment_number: i.installment_number,
+            payLink: i.pay_link || '',
+            customerNationalCode: i.customer ? i.customer.national_code : '',
+          };
+        });
+        setInstallments(processedInstallments);
+        setLoadingInstallments(false);
       } catch (error) {
         console.error('Error fetching installments:', error);
       }
@@ -362,7 +463,101 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            {/* Desktop buttons - only for admin */}
+            {userRole === 'admin' && (
+              <div className="hidden md:flex items-center gap-3">
+                <Popover open={showBackupPopoverDesktop} onOpenChange={setShowBackupPopoverDesktop}>
+                  <PopoverTrigger asChild>
+                    <button
+                      className="px-3 py-2 text-sm bg-green-500 hover:bg-green-600 text-white rounded-md transition-colors flex items-center gap-2"
+                    >
+                      <Download className="w-4 h-4" />
+                      پشتیبان‌گیری
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80">
+                    <div className="space-y-4">
+                      <h4 className="font-medium leading-none">انتخاب داده‌ها برای پشتیبان‌گیری</h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="customers"
+                            checked={backupFilters.customers}
+                            onCheckedChange={(checked) => setBackupFilters(prev => ({ ...prev, customers: !!checked }))}
+                          />
+                          <label htmlFor="customers" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            مشتریان
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="policies"
+                            checked={backupFilters.policies}
+                            onCheckedChange={(checked) => setBackupFilters(prev => ({ ...prev, policies: !!checked }))}
+                          />
+                          <label htmlFor="policies" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            بیمه‌نامه‌ها
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="installments"
+                            checked={backupFilters.installments}
+                            onCheckedChange={(checked) => setBackupFilters(prev => ({ ...prev, installments: !!checked }))}
+                          />
+                          <label htmlFor="installments" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            اقساط
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="blogs"
+                            checked={backupFilters.blogs}
+                            onCheckedChange={(checked) => setBackupFilters(prev => ({ ...prev, blogs: !!checked }))}
+                          />
+                          <label htmlFor="blogs" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            اخبار
+                          </label>
+                        </div>
+                      </div>
+                      <Button onClick={handleBackupClick} className="w-full">
+                        دانلود داده‌ها
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+
+                <button
+                  className="px-3 py-2 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors flex items-center gap-2"
+                  onClick={() => setShowRestoreModal(true)}
+                >
+                  <Upload className="w-4 h-4" />
+                  بازنشانی
+                </button>
+
+                <button
+                  className="px-3 py-2 text-sm bg-white/20 hover:bg-white/30 rounded-md transition-colors"
+                  onClick={() => { localStorage.removeItem('token'); onLogout(); }}
+                >
+                  خروج
+                </button>
+              </div>
+            )}
+
+            {/* Exit button only for non-admin users on desktop */}
+            {userRole !== 'admin' && (
+              <div className="hidden md:block">
+                <button
+                  className="px-3 py-2 text-sm bg-white/20 hover:bg-white/30 rounded-md transition-colors"
+                  onClick={() => { localStorage.removeItem('token'); onLogout(); }}
+                >
+                  خروج
+                </button>
+              </div>
+            )}
+
+            {/* Mobile exit button for all users */}
+            <div className="md:hidden">
               <button
                 className="px-3 py-2 text-sm bg-white/20 hover:bg-white/30 rounded-md transition-colors"
                 onClick={() => { localStorage.removeItem('token'); onLogout(); }}
@@ -371,6 +566,82 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
               </button>
             </div>
           </div>
+
+          {/* Mobile Admin Buttons - only for admin */}
+          {userRole === 'admin' && (
+            <div className="md:hidden flex flex-col gap-2 mt-4 pt-4 border-t border-white/20">
+              <div className="flex gap-2 justify-center">
+                <Popover open={showBackupPopoverMobile} onOpenChange={setShowBackupPopoverMobile}>
+                  <PopoverTrigger asChild>
+                    <button
+                      className="px-3 py-2 text-sm bg-green-500 hover:bg-green-600 text-white rounded-md transition-colors flex items-center gap-2"
+                    >
+                      <Download className="w-4 h-4" />
+                      پشتیبان‌گیری
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80">
+                    <div className="space-y-4">
+                      <h4 className="font-medium leading-none">انتخاب داده‌ها برای پشتیبان‌گیری</h4>
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="customers"
+                            checked={backupFilters.customers}
+                            onCheckedChange={(checked) => setBackupFilters(prev => ({ ...prev, customers: !!checked }))}
+                          />
+                          <label htmlFor="customers" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            مشتریان
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="policies"
+                            checked={backupFilters.policies}
+                            onCheckedChange={(checked) => setBackupFilters(prev => ({ ...prev, policies: !!checked }))}
+                          />
+                          <label htmlFor="policies" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            بیمه‌نامه‌ها
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="installments"
+                            checked={backupFilters.installments}
+                            onCheckedChange={(checked) => setBackupFilters(prev => ({ ...prev, installments: !!checked }))}
+                          />
+                          <label htmlFor="installments" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            اقساط
+                          </label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id="blogs"
+                            checked={backupFilters.blogs}
+                            onCheckedChange={(checked) => setBackupFilters(prev => ({ ...prev, blogs: !!checked }))}
+                          />
+                          <label htmlFor="blogs" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            اخبار
+                          </label>
+                        </div>
+                      </div>
+                      <Button onClick={handleBackupClick} className="w-full">
+                        دانلود داده‌ها
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+
+                <button
+                  className="px-3 py-2 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors flex items-center gap-2"
+                  onClick={() => setShowRestoreModal(true)}
+                >
+                  <Upload className="w-4 h-4" />
+                  بازنشانی
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
@@ -402,7 +673,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       <p className="text-3xl">{blogs.length.toString()}</p>
                       <p className="text-sm text-green-600 mt-1">آمار به‌روز</p>
                     </div>
-                      <FileText className="text-blue-600" />
+                    <FileText className="text-blue-600" />
                   </div>
                 </div>
 
@@ -419,7 +690,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       })()}
                       <p className="text-sm text-green-600 mt-1">امتیاز شخصی</p>
                     </div>
-                      <User className="text-blue-600" />
+                    <User className="text-blue-600" />
                   </div>
                 </div>
               </>
@@ -446,7 +717,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       <p className="text-3xl text-red-600">{stats.overdueInstallmentsCount.toString()}</p>
                       <p className="text-sm text-red-600 mt-1">آمار به‌روز</p>
                     </div>
-                      <CreditCard className="text-red-600" />
+                    <CreditCard className="text-red-600" />
                   </div>
                 </div>
 
@@ -457,7 +728,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       <p className="text-3xl text-yellow-600">{stats.nearExpiryPoliciesCount.toString()}</p>
                       <p className="text-sm text-yellow-600 mt-1">در ۳۰ روز آینده</p>
                     </div>
-                      <Calendar className="text-yellow-600" />
+                    <Calendar className="text-yellow-600" />
                   </div>
                 </div>
 
@@ -474,7 +745,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       })()}
                       <p className="text-sm text-green-600 mt-1">امتیاز شخصی</p>
                     </div>
-                      <User className="text-blue-600" />
+                    <User className="text-blue-600" />
                   </div>
                 </div>
               </>
@@ -511,7 +782,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       <p className="text-3xl">{customers.filter(c => (c.role || 'customer') === 'customer').length.toString()}</p>
                       <p className="text-sm text-green-600 mt-1">آمار به‌روز</p>
                     </div>
-                      <span className="text-blue-600 w-8 h-8"><User /></span>
+                    <span className="text-blue-600 w-8 h-8"><User /></span>
                   </div>
                 </div>
 
@@ -524,7 +795,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       <p className="text-3xl">{stats.policiesCount.toString()}</p>
                       <p className="text-sm text-green-600 mt-1">آمار به‌روز</p>
                     </div>
-                      <FileText className="text-green-600" />
+                    <FileText className="text-green-600" />
                   </div>
                 </div>
 
@@ -535,7 +806,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       <p className="text-3xl text-red-600">{stats.overdueInstallmentsCount.toString()}</p>
                       <p className="text-sm text-red-600 mt-1">آمار به‌روز</p>
                     </div>
-                      <CreditCard className="text-red-600" />
+                    <CreditCard className="text-red-600" />
                   </div>
                 </div>
 
@@ -546,7 +817,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
                       <p className="text-3xl text-yellow-600">{stats.nearExpiryPoliciesCount.toString()}</p>
                       <p className="text-sm text-yellow-600 mt-1">در ۳۰ روز آینده</p>
                     </div>
-                      <Calendar className="text-yellow-600" />
+                    <Calendar className="text-yellow-600" />
                   </div>
                 </div>
               </>
@@ -563,8 +834,8 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
           <TabsList className={`relative grid w-full ${cols === 1 ? 'grid-cols-1' : cols === 2 ? 'grid-cols-2' : cols === 3 ? 'grid-cols-3' : 'grid-cols-4'} p-1 rounded-lg`}>
             <motion.div
               className="absolute top-1 bottom-1 bg-white rounded-md shadow-sm"
-              style={{ width: `calc(${100/cols}% - 4px)` }}
-              animate={{ left: `calc(${tabIndex} * ${100/cols}% + 2px)` }}
+              style={{ width: `calc(${100 / cols}% - 4px)` }}
+              animate={{ left: `calc(${tabIndex} * ${100 / cols}% + 2px)` }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
             />
             {visibleTabs.includes('customers') && <TabsTrigger
@@ -616,18 +887,125 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
           <InstallmentsTab
             installments={installments}
             setInstallments={setInstallments}
-            loading={loadingInstallments}
+            loadingInstallments={loadingInstallments}
             token={''}
+            onLogout={onLogout}
           />
 
           <BlogsTab
             blogs={blogs}
             setBlogs={setBlogs}
-            loading={loadingBlogs}
+            loadingBlogs={loadingBlogs}
             token={''}
+            onLogout={onLogout}
           />
         </Tabs>
       </div>
+
+      {/* TOTP Modal for Backup */}
+      <Dialog open={showTotpModal} onOpenChange={setShowTotpModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>تایید هویت دو مرحله‌ای</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              لطفاً کد TOTP را از برنامه احراز هویت خود وارد کنید:
+            </p>
+            <div className="flex justify-center">
+              <InputOTP
+                value={totpCode}
+                onChange={setTotpCode}
+                maxLength={6}
+                containerClassName="justify-center"
+              >
+                <InputOTPGroup dir="ltr">
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowTotpModal(false)}
+                className="flex-1"
+              >
+                لغو
+              </Button>
+              <Button
+                onClick={handleTotpSubmit}
+                className="flex-1"
+              >
+                تایید و دانلود
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Restore Modal */}
+      <Dialog open={showRestoreModal} onOpenChange={setShowRestoreModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>بازنشانی داده‌ها</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                انتخاب فایل پشتیبان
+              </label>
+              <input
+                type="file"
+                accept=".json"
+                onChange={(e) => setRestoreFile(e.target.files?.[0] || null)}
+                className="w-full p-2 border border-gray-300 rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                کد TOTP
+              </label>
+              <InputOTP
+                value={restoreTotpCode}
+                onChange={setRestoreTotpCode}
+                maxLength={6}
+                containerClassName="justify-center"
+              >
+                <InputOTPGroup dir="ltr">
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowRestoreModal(false)}
+                className="flex-1"
+                disabled={restoreLoading}
+              >
+                لغو
+              </Button>
+              <Button
+                onClick={handleRestore}
+                className="flex-1"
+                disabled={restoreLoading || !restoreFile || !restoreTotpCode.trim()}
+              >
+                {restoreLoading ? 'در حال بازیابی...' : 'بازیابی داده‌ها'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

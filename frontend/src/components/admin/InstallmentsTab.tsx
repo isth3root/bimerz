@@ -53,11 +53,12 @@ interface Installment {
 interface InstallmentsTabProps {
   installments: Installment[];
   setInstallments: React.Dispatch<React.SetStateAction<Installment[]>>;
-  loading: boolean;
+  loadingInstallments: boolean;
   token: string;
+  onLogout: () => void;
 }
 
-export function InstallmentsTab({ installments, setInstallments, loading, token }: InstallmentsTabProps) {
+export function InstallmentsTab({ installments, setInstallments, loadingInstallments, token }: InstallmentsTabProps) {
   const [editingInstallment, setEditingInstallment] =
     useState<Installment | null>(null);
   const [formDataInstallment, setFormDataInstallment] = useState({
@@ -361,7 +362,7 @@ export function InstallmentsTab({ installments, setInstallments, loading, token 
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              {loading ? <Skeleton className="h-6 w-24" /> : <CardTitle>مدیریت اقساط</CardTitle>}
+              {loadingInstallments ? <Skeleton className="h-6 w-24" /> : <CardTitle>مدیریت اقساط</CardTitle>}
             </div>
           </div>
         </CardHeader>

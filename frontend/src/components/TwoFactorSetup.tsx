@@ -28,8 +28,8 @@ export function TwoFactorSetup({ secret, userId, onComplete, onBack }: TwoFactor
       setCopied(true);
       toast.success('کپی شد');
       setTimeout(() => setCopied(false), 2000);
-    } catch (err: any) {
-      toast.error(err, 'خطا در کپی کردن');
+    } catch {
+      toast.error('خطا در کپی کردن');
     }
   };
 

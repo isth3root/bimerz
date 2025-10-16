@@ -155,16 +155,11 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const cols = visibleTabs.length;
   const tabIndex = visibleTabs.indexOf(activeTab);
 
-  const token = localStorage.getItem('token');
-
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        const response = await api.get('/blogs', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await api.get('/blogs');
+
         const data = response.data.map((blog: BlogAPI) => ({
           id: blog.id.toString(),
           title: blog.title,
@@ -183,11 +178,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
     const fetchCustomers = async () => {
       try {
-        const response = await api.get('/admin/customers', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await api.get('/admin/customers');
 
         const data = response.data;
         if (!Array.isArray(data)) {
@@ -211,7 +202,6 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
       } catch (error) {
         console.error('Error fetching customers:', error);
         if (error instanceof Error && error.message.includes('401')) {
-          localStorage.removeItem('token');
           onLogout();
         }
       } finally {
@@ -221,11 +211,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
     const fetchPolicies = async () => {
       try {
-        const response = await api.get('/admin/policies', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await api.get('/admin/policies');
 
         const data = response.data;
         if (!Array.isArray(data)) {
@@ -268,11 +254,11 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
           nearExpiryData,
           nearExpiryInstallmentsData,
         ] = await Promise.all([
-          api.get('/admin/customers/count', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data).catch(() => 0),
-          api.get('/count', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data).catch(() => 0),
-          api.get('/installments/overdue/count', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data).catch(() => 0),
-          api.get('/admin/policies/near-expiry/count', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data).catch(() => 0),
-          api.get('/installments/near-expiry/count', { headers: { Authorization: `Bearer ${token}` } }).then(res => res.data).catch(() => 0),
+          api.get('/admin/customers/count').then(res => res.data).catch(() => 0),
+          api.get('/count').then(res => res.data).catch(() => 0),
+          api.get('/installments/overdue/count').then(res => res.data).catch(() => 0),
+          api.get('/admin/policies/near-expiry/count').then(res => res.data).catch(() => 0),
+          api.get('/installments/near-expiry/count').then(res => res.data).catch(() => 0),
         ]);
 
         const customersCount = typeof customersCountData === 'object' && customersCountData.count !== undefined ? customersCountData.count : customersCountData;
@@ -293,33 +279,19 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
       } catch (error) {
         console.error('Error fetching policies:', error);
         if (error instanceof Error && error.message.includes('401')) {
-          localStorage.removeItem('token');
           onLogout();
         }
       }
     };
 
-    if (!token) {
-      console.error("token not found");
-      onLogout();
-      return;
-    }
-
-    if (token) {
-      fetchCustomers();
-      fetchPolicies();
-      fetchBlogs();
-    }
-  }, [token, onLogout]);
-
+    fetchCustomers();
+    fetchPolicies();
+    fetchBlogs();
+  }, [onLogout]);
   useEffect(() => {
     const fetchInstallments = async () => {
       try {
-        const response = await api.get('/admin/installments', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await api.get('/admin/installments');
         const data = response.data;
         if (!Array.isArray(data)) {
           console.error('Expected array for installments data');
@@ -358,10 +330,10 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
       }
     };
 
-    if (token && customers.length > 0 && policies.length > 0) {
+    if (customers.length > 0 && policies.length > 0) {
       fetchInstallments();
     }
-  }, [token, customers, policies]);
+  }, [customers, policies]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -629,7 +601,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
             customers={customers}
             setCustomers={setCustomers}
             loading={loading}
-            token={token || ''}
+            token={''}
           />
 
           <PoliciesTab
@@ -637,7 +609,7 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
             setPolicies={setPolicies}
             customers={customers}
             loadingPolicies={loadingPolicies}
-            token={token || ''}
+            token={''}
             onLogout={onLogout}
           />
 
@@ -645,14 +617,14 @@ export function AdminDashboard({ onLogout }: AdminDashboardProps) {
             installments={installments}
             setInstallments={setInstallments}
             loading={loadingInstallments}
-            token={token || ''}
+            token={''}
           />
 
           <BlogsTab
             blogs={blogs}
             setBlogs={setBlogs}
             loading={loadingBlogs}
-            token={token || ''}
+            token={''}
           />
         </Tabs>
       </div>

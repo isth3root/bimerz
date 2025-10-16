@@ -1,23 +1,24 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
+import api from '../utils/api';
 
 type UserType = 'customer' | 'admin' | 'admin-2' | 'admin-3' | null;
 
 interface AuthState {
   userType: UserType;
-  token: string | null;
   userId: string | null;
   role: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
 }
 
 interface AuthContextType extends AuthState {
-  login: (data: { access_token: string; username: string; role: UserType }) => void;
+  login: (data: { username: string; role: UserType }) => void;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -33,60 +34,113 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [authState, setAuthState] = useState<AuthState>({
     userType: null,
-    token: null,
     userId: null,
     role: null,
+    isAuthenticated: false,
+    isLoading: true,
   });
 
+  // Use ref to prevent multiple requests
+  const authCheckStarted = useRef(false);
+
   useEffect(() => {
-    // Load from localStorage on mount
-    const userType = localStorage.getItem('userType') as UserType;
-    const token = localStorage.getItem('token');
-    const userId = localStorage.getItem('userId');
-    const role = localStorage.getItem('role') as UserType;
+    // Only run auth check once
+    if (authCheckStarted.current) return;
+    authCheckStarted.current = true;
 
-    // Validate data
-    const validUserTypes: UserType[] = ['customer', 'admin', 'admin-2', 'admin-3', null];
-    const isValidUserType = validUserTypes.includes(userType);
-    const isValidRole = validUserTypes.includes(role);
-    const isValidToken = typeof token === 'string' && token.length > 0;
+    console.log('🔄 Starting initial auth check...');
 
-    if (isValidUserType && isValidToken && isValidRole) {
-      setAuthState({ userType, token, userId, role });
-    } else {
-      // Clear invalid data
-      localStorage.removeItem('userType');
-      localStorage.removeItem('token');
-      localStorage.removeItem('userId');
-      localStorage.removeItem('role');
-    }
+    const checkAuth = async () => {
+      try {
+        const response = await api.get('/auth/verify', {
+          timeout: 5000
+        });
+
+        console.log('✅ User is authenticated:', response.data);
+
+        if (response.data.authenticated) {
+          const { user } = response.data;
+
+          setAuthState({
+            userType: user.role,
+            userId: user.username,
+            role: user.role,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+
+          localStorage.setItem('userType', user.role || '');
+          localStorage.setItem('userId', user.username);
+          localStorage.setItem('role', user.role || '');
+        }
+      } catch (error: any) {
+        // 401 is NORMAL - it means no user is logged in
+        if (error.response?.status === 401) {
+          console.log('👤 No user logged in (this is normal)');
+          setAuthState({
+            userType: null,
+            userId: null,
+            role: null,
+            isAuthenticated: false,
+            isLoading: false,
+          });
+        } else if (error.code === 'ECONNABORTED') {
+          console.log('⏱️ Request timeout (normal for cancelled requests)');
+          setAuthState(prev => ({
+            ...prev,
+            isLoading: false
+          }));
+        } else {
+          console.error('❌ Auth check error:', error);
+          setAuthState(prev => ({
+            ...prev,
+            isLoading: false
+          }));
+        }
+
+        // Clear any stale data
+        localStorage.removeItem('userType');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('role');
+      }
+    };
+
+    checkAuth();
   }, []);
 
-  const login = (data: { access_token: string; username: string; role: UserType }) => {
+  const login = (data: { username: string; role: UserType }) => {
+    console.log('🔐 User logging in:', data);
     const newState = {
       userType: data.role,
-      token: data.access_token,
       userId: data.username,
       role: data.role,
+      isAuthenticated: true,
+      isLoading: false,
     };
     setAuthState(newState);
     localStorage.setItem('userType', data.role || '');
-    localStorage.setItem('token', data.access_token);
     localStorage.setItem('userId', data.username);
     localStorage.setItem('role', data.role || '');
   };
 
-  const logout = () => {
-    setAuthState({
-      userType: null,
-      token: null,
-      userId: null,
-      role: null,
-    });
-    localStorage.removeItem('userType');
-    localStorage.removeItem('token');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('role');
+  const logout = async () => {
+    console.log('🚪 User logging out');
+    try {
+      await api.post('/auth/logout');
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setAuthState({
+        userType: null,
+        userId: null,
+        role: null,
+        isAuthenticated: false,
+        isLoading: false,
+      });
+      localStorage.removeItem('userType');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('role');
+    }
   };
 
   return (

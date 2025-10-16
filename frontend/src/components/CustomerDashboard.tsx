@@ -96,34 +96,35 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
     overdueCount: 0,
     nearExpiryPoliciesCount: 0,
   });
-  const [, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+
   const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);
   const [showInstallmentsDialog, setShowInstallmentsDialog] = useState(false);
 
-  const token = localStorage.getItem('token');
+  // Remove token from localStorage - using cookies instead
   const userId = localStorage.getItem('userId');
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!token || !userId) return;
+      if (!userId) {
+        console.log('No user ID found');
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         let nearExpiryPoliciesCount = 0;
         let overdueCount = 0;
+
         const [
           customerData,
           policiesData,
           installmentsData,
         ] = await Promise.all([
-          api.get(`/admin/customers/by-national/${userId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }).then(res => res.data),
-          api.get('/customer/policies', {
-            headers: { Authorization: `Bearer ${token}` },
-          }).then(res => res.data),
-          api.get('/installments/customer', {
-            headers: { Authorization: `Bearer ${token}` },
-          }).then(res => res.data),
+          api.get(`/admin/customers/by-national/${userId}`).then(res => res.data),
+          api.get('/customer/policies').then(res => res.data),
+          api.get('/installments/customer').then(res => res.data),
         ]);
 
         setCustomer(customerData);
@@ -150,11 +151,12 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
             color,
             bgColor,
             isInstallment: p.payment_type === 'اقساطی',
-            payId: p.payment_id,
-            payLink: p.payment_link,
+            payId: p.payment_id || undefined,
+            payLink: p.payment_link || undefined,
             hasPdf: !!p.pdf_path,
           };
         });
+
         nearExpiryPoliciesCount = policies.filter(p => p.status === 'نزدیک انقضا').length;
         setInsurancePolicies(policies);
 
@@ -175,17 +177,24 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
             pay_link: inst.pay_link,
           };
         });
+
         setAllInstallments(processedInstallments);
         setStats({ overdueCount, nearExpiryPoliciesCount });
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching data:', error);
-        toast.error("خطا در بارگیری اطلاعات پنل");
+        if (error.response?.status === 401) {
+          toast.error("لطفاً مجدداً وارد شوید");
+          onLogout();
+        } else {
+          toast.error("خطا در بارگیری اطلاعات پنل");
+        }
       } finally {
         setLoading(false);
       }
     };
+
     fetchData();
-  }, [token, userId]);
+  }, [userId, onLogout]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -237,6 +246,17 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
 
   const toPersianDigits = (str: string) => str.replace(/[0-9]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[parseInt(d)]);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p>در حال بارگذاری اطلاعات...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-gradient-to-br from-teal-400 to-green-400 shadow-sm border-b">
@@ -244,7 +264,7 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-12 h-10 rounded-lg flex items-center justify-center">
-                 <img src="/logo.png" alt="Logo" className="w-12 h-12 rounded-lg object-cover" />
+                <img src="/logo.png" alt="Logo" className="w-12 h-12 rounded-lg object-cover" />
               </div>
               <div>
                 <h1 className="text-lg">پنل مشتری</h1>
@@ -313,43 +333,42 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
                 <div>
                   <p className="text-sm text-gray-600">امتیاز بیمه‌گذار</p>
                   <div className="flex flex-row-reverse justify-center items-center gap-4">
-                    <span className={`text-lg font-bold ${
-                      customer?.score === 'A' ? 'text-green-600' :
-                      customer?.score === 'B' ? 'text-blue-600' :
-                      customer?.score === 'C' ? 'text-orange-600' :
-                      'text-red-600'
-                    }`}>{getScoreDescription(customer?.score)}</span>
+                    <span className={`text-lg font-bold ${customer?.score === 'A' ? 'text-green-600' :
+                        customer?.score === 'B' ? 'text-blue-600' :
+                          customer?.score === 'C' ? 'text-orange-600' :
+                            'text-red-600'
+                      }`}>{getScoreDescription(customer?.score)}</span>
                     {['A', 'B', 'C', 'D'].map((score) => (
                       <span
                         key={score}
-                        className={`${
-                          score === customer?.score
+                        className={`${score === customer?.score
                             ? score === 'A' ? 'text-green-600 font-bold text-3xl rounded-full bg-green-100 w-12 h-12 flex items-center justify-center'
-                            : score === 'B' ? 'text-blue-600 font-bold text-3xl rounded-full bg-blue-100 w-12 h-12 flex items-center justify-center'
-                            : score === 'C' ? 'text-orange-600 font-bold text-3xl rounded-full bg-orange-100 w-12 h-12 flex items-center justify-center'
-                            : 'text-red-600 font-bold text-3xl rounded-full bg-red-100 w-12 h-12 flex items-center justify-center'
+                              : score === 'B' ? 'text-blue-600 font-bold text-3xl rounded-full bg-blue-100 w-12 h-12 flex items-center justify-center'
+                                : score === 'C' ? 'text-orange-600 font-bold text-3xl rounded-full bg-orange-100 w-12 h-12 flex items-center justify-center'
+                                  : 'text-red-600 font-bold text-3xl rounded-full bg-red-100 w-12 h-12 flex items-center justify-center'
                             : score === 'A' ? 'text-green-400 font-light text-sm'
-                            : score === 'B' ? 'text-blue-400 font-light text-sm'
-                            : score === 'C' ? 'text-orange-400 font-light text-sm'
-                            : 'text-red-400 font-light text-sm'
-                        }`}
+                              : score === 'B' ? 'text-blue-400 font-light text-sm'
+                                : score === 'C' ? 'text-orange-400 font-light text-sm'
+                                  : 'text-red-400 font-light text-sm'
+                          }`}
                       >
                         {score}
                       </span>
                     ))}
                   </div>
                 </div>
-                <User className={`h-8 w-8 ${
-                  customer?.score === 'A' ? 'text-green-600' :
-                  customer?.score === 'B' ? 'text-blue-600' :
-                  customer?.score === 'C' ? 'text-orange-600' :
-                  'text-red-600'
-                }`} />
+                <User className={`h-8 w-8 ${customer?.score === 'A' ? 'text-green-600' :
+                    customer?.score === 'B' ? 'text-blue-600' :
+                      customer?.score === 'C' ? 'text-orange-600' :
+                        'text-red-600'
+                  }`} />
               </div>
             </CardContent>
           </Card>
         </div>
-            <p className="text-center text-red-600 font-bold py-10">وضعیت اقساط پرداخت شده حداکثر ظرف ۷۲ ساعت تایید میگردد</p>
+
+        <p className="text-center text-red-600 font-bold py-10">وضعیت اقساط پرداخت شده حداکثر ظرف ۷۲ ساعت تایید میگردد</p>
+
         <Card className="mb-8 bg-gradient-to-br from-teal-200 to-green-200">
           <CardHeader>
             <CardTitle>بیمه‌نامه‌های من</CardTitle>
@@ -372,85 +391,82 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
                     return new Date(b.startDate).getTime() - new Date(a.startDate).getTime();
                   })
                   .map((policy) => {
-                  const IconComponent = policy.icon;
-                  return (
-                    <Card key={policy.id} className="border-0 shadow-md">
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                          <div className={`p-3 rounded-full ${policy.bgColor}`}>
-                            <IconComponent className={`h-6 w-6 ${policy.color}`} />
-                          </div>
-                          {getStatusBadge(policy.status)}
-                        </div>
-                        <CardTitle className="text-lg">{policy.type}</CardTitle>
-                        <CardDescription>{policy.vehicle}</CardDescription>
-                      </CardHeader>
-                      <CardContent className="flex flex-col justify-between h-full">
-                        <div className="space-y-2 text-sm">
-                          {policy.payId && (
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-600">شناسه پرداخت:</span>
-                              <div className="flex items-center gap-1">
-                                <span>{toPersianDigits(policy.payId!)}</span>
-                                <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => copyToClipboard(policy.payId!)}>
-                                  <Copy className="h-3 w-3" />
-                                </Button>
-                              </div>
+                    const IconComponent = policy.icon;
+                    return (
+                      <Card key={policy.id} className="border-0 shadow-md">
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center justify-between">
+                            <div className={`p-3 rounded-full ${policy.bgColor}`}>
+                              <IconComponent className={`h-6 w-6 ${policy.color}`} />
                             </div>
-                          )}
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">شروع:</span>
-                            <span>{toPersianDigits(policy.startDate)}</span>
+                            {getStatusBadge(policy.status)}
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">انقضا:</span>
-                            <span>{toPersianDigits(policy.endDate)}</span>
+                          <CardTitle className="text-lg">{policy.type}</CardTitle>
+                          <CardDescription>{policy.vehicle}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex flex-col justify-between h-full">
+                          <div className="space-y-2 text-sm">
+                            {policy.payId && (
+                              <div className="flex justify-between items-center">
+                                <span className="text-gray-600">شناسه پرداخت:</span>
+                                <div className="flex items-center gap-1">
+                                  <span>{toPersianDigits(policy.payId!)}</span>
+                                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => copyToClipboard(policy.payId!)}>
+                                    <Copy className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">شروع:</span>
+                              <span>{toPersianDigits(policy.startDate)}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">انقضا:</span>
+                              <span>{toPersianDigits(policy.endDate)}</span>
+                            </div>
                           </div>
-                        </div>
-                        <div className="mt-4 flex gap-2">
-                          {policy.hasPdf && (
-                            <Button size="sm" variant="outline" className={policy.isInstallment ? "flex-1" : "w-full"} onClick={async () => {
-                              try {
-                                const response = await api.get(`/customer/policies/${policy.id}/download`, {
-                                  headers: { Authorization: `Bearer ${token}` },
-                                  responseType: 'blob',
-                                });
-                                const blob = response.data;
-                                const url = window.URL.createObjectURL(blob);
-                                const a = document.createElement('a');
-                                a.href = url;
-                                a.download = `policy-${policy.id}.pdf`;
-                                a.click();
-                                window.URL.revokeObjectURL(url);
-                              } catch (error) {
-                                console.error(error)
-                                toast.error('خطا در دانلود فایل');
-                              }
-                            }}>
-                              {/* <Download className="h-4 w-4" /> */}
-                              دانلود بیمه نامه
-                            </Button>
-                          )}
-                          {policy.isInstallment && (
-                            <>
-                              <Button size="sm" variant="outline" className={policy.payLink ? "flex-1" : "flex-1"} onClick={() => {
-                                setSelectedPolicy(policy);
-                                setShowInstallmentsDialog(true);
+                          <div className="mt-4 flex gap-2">
+                            {policy.hasPdf && (
+                              <Button size="sm" variant="outline" className={policy.isInstallment ? "flex-1" : "w-full"} onClick={async () => {
+                                try {
+                                  const response = await api.get(`/customer/policies/${policy.id}/download`, {
+                                    responseType: 'blob',
+                                  });
+                                  const blob = response.data;
+                                  const url = window.URL.createObjectURL(blob);
+                                  const a = document.createElement('a');
+                                  a.href = url;
+                                  a.download = `policy-${policy.id}.pdf`;
+                                  a.click();
+                                  window.URL.revokeObjectURL(url);
+                                } catch (error) {
+                                  console.error(error)
+                                  toast.error('خطا در دانلود فایل');
+                                }
                               }}>
-                                اقساط
+                                دانلود بیمه نامه
                               </Button>
-                              {policy.payLink && (
-                                <Button size="sm" className="flex-1" onClick={() => handlePayLink(policy.payLink)}>
-                                  {/* <CreditCard className="h-4 w-4 ml-2" /> */}
-                                  پرداخت
+                            )}
+                            {policy.isInstallment && (
+                              <>
+                                <Button size="sm" variant="outline" className={policy.payLink ? "flex-1" : "flex-1"} onClick={() => {
+                                  setSelectedPolicy(policy);
+                                  setShowInstallmentsDialog(true);
+                                }}>
+                                  اقساط
                                 </Button>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
+                                {policy.payLink && (
+                                  <Button size="sm" className="flex-1" onClick={() => handlePayLink(policy.payLink)}>
+                                    پرداخت
+                                  </Button>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
                   })}
               </div>
             )}
@@ -480,16 +496,16 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
                     .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
                     .slice(0, 5)
                     .map(installment => (
-                    <TableRow key={installment.id}>
-                      <TableCell>{installment.policy?.insurance_type || 'N/A'}</TableCell>
-                      <TableCell>{getPaymentStatusBadge(installment.status)}</TableCell>
-                      <TableCell>{toPersianDigits(installment.due_date)}</TableCell>
-                      <TableCell>
-                        {toPersianDigits(parseFloat(installment.amount).toLocaleString('fa-IR'))} ریال
-                      </TableCell>
-                      <TableCell>{toPersianDigits(installment.installment_number.toString())}</TableCell>
-                    </TableRow>
-                  ))
+                      <TableRow key={installment.id}>
+                        <TableCell>{installment.policy?.insurance_type || 'N/A'}</TableCell>
+                        <TableCell>{getPaymentStatusBadge(installment.status)}</TableCell>
+                        <TableCell>{toPersianDigits(installment.due_date)}</TableCell>
+                        <TableCell>
+                          {toPersianDigits(parseFloat(installment.amount).toLocaleString('fa-IR'))} ریال
+                        </TableCell>
+                        <TableCell>{toPersianDigits(installment.installment_number.toString())}</TableCell>
+                      </TableRow>
+                    ))
                 ) : (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center h-24">
@@ -524,13 +540,13 @@ export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
                       .filter(inst => inst.policy_id === selectedPolicy.id)
                       .sort((a, b) => a.installment_number - b.installment_number)
                       .map((installment) => (
-                      <TableRow key={installment.id}>
-                        <TableCell>{toPersianDigits(installment.installment_number.toString())}</TableCell>
-                        <TableCell>{toPersianDigits(parseFloat(installment.amount).toLocaleString('fa-IR'))} ریال</TableCell>
-                        <TableCell>{toPersianDigits(installment.due_date)}</TableCell>
-                        <TableCell>{getPaymentStatusBadge(installment.status)}</TableCell>
-                      </TableRow>
-                    ))
+                        <TableRow key={installment.id}>
+                          <TableCell>{toPersianDigits(installment.installment_number.toString())}</TableCell>
+                          <TableCell>{toPersianDigits(parseFloat(installment.amount).toLocaleString('fa-IR'))} ریال</TableCell>
+                          <TableCell>{toPersianDigits(installment.due_date)}</TableCell>
+                          <TableCell>{getPaymentStatusBadge(installment.status)}</TableCell>
+                        </TableRow>
+                      ))
                   ) : (
                     <TableRow>
                       <TableCell colSpan={4} className="text-center h-24">

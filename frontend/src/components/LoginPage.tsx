@@ -3,14 +3,27 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "./ui/input-otp";
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import { TwoFactorSetup } from "./TwoFactorSetup";
 
 import api from '../utils/api';
 
 interface LoginPageProps {
-  onLogin: (data: { access_token: string; username: string; role: 'customer' | 'admin' | 'admin-2' | 'admin-3' }) => void;
+  onLogin: (data: { username: string; role: 'customer' | 'admin' | 'admin-2' | 'admin-3' }) => void;
   onNavigate: (page: string) => void;
+}
+
+interface LoginResponse {
+  username?: string;
+  role?: 'customer' | 'admin' | 'admin-2' | 'admin-3';
+  requires_2fa?: boolean;
+  requires_setup?: boolean;
+  secret?: string;
+  otpauth_url?: string;
+  userId?: number;
+  message?: string;
 }
 
 export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
@@ -18,7 +31,11 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
   const [insuranceCode, setInsuranceCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState<{ nationalCode?: string; insuranceCode?: string }>({});
+  const [errors, setErrors] = useState<{ nationalCode?: string; insuranceCode?: string; twoFactorCode?: string }>({});
+  const [showTwoFactor, setShowTwoFactor] = useState(false);
+  const [showSetup, setShowSetup] = useState(false);
+  const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [pendingLoginData, setPendingLoginData] = useState<LoginResponse | null>(null);
 
   const persianToEnglish = (str: string): string => {
     const persianNumbers = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
@@ -52,10 +69,21 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
         username: persianToEnglish(nationalCode),
         password: persianToEnglish(insuranceCode),
       });
-      const data = response.data;
-      toast.success('ورود موفق');
-      setErrors({});
-      onLogin(data);
+      const data: LoginResponse = response.data;
+
+      if (data.requires_setup) {
+        setPendingLoginData(data);
+        setShowSetup(true);
+        toast.info('احراز هویت دو مرحله‌ای را تنظیم کنید');
+      } else if (data.requires_2fa) {
+        setPendingLoginData(data);
+        setShowTwoFactor(true);
+        toast.info('کد احراز هویت دو مرحله‌ای را وارد کنید');
+      } else {
+        toast.success('ورود موفق');
+        setErrors({});
+        onLogin(data as { access_token: string; username: string; role: 'customer' | 'admin' | 'admin-2' | 'admin-3' });
+      }
     } catch (error: unknown) {
       console.error('Login error:', error);
       const axiosError = error as { response?: { status: number } };
@@ -64,6 +92,34 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
       } else {
         toast.error('اطلاعات ورود نامعتبر است');
       }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleTwoFactorSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!twoFactorCode.trim()) {
+      setErrors({ twoFactorCode: 'کد ۲FA الزامی است' });
+      return;
+    }
+    setIsLoading(true);
+
+    try {
+      const response = await api.post('/auth/verify-2fa', {
+        userId: pendingLoginData?.userId,
+        code: twoFactorCode,
+      });
+      const data = response.data;
+      toast.success('ورود موفق');
+      setErrors({});
+      setShowTwoFactor(false);
+      setTwoFactorCode('');
+      setPendingLoginData(null);
+      onLogin({ username: data.username || '', role: (data.role as 'customer' | 'admin' | 'admin-2' | 'admin-3') || 'customer' });
+    } catch (error: unknown) {
+      console.error('2FA verification error:', error);
+      toast.error('کد ۲FA نامعتبر است');
     } finally {
       setIsLoading(false);
     }
@@ -90,7 +146,71 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            {showSetup ? (
+              <TwoFactorSetup
+                secret={pendingLoginData?.secret || ''}
+                otpauthUrl={pendingLoginData?.otpauth_url || ''}
+                userId={pendingLoginData?.userId || 0}
+                role={pendingLoginData?.role || ''}
+                onComplete={(data) => {
+                  setShowSetup(false);
+                  setPendingLoginData(null);
+                  onLogin({ username: data.username || '', role: (data.role as 'customer' | 'admin' | 'admin-2' | 'admin-3') || 'customer' });
+                }}
+                onBack={() => {
+                  setShowSetup(false);
+                  setPendingLoginData(null);
+                  setErrors({});
+                }}
+              />
+            ) : showTwoFactor ? (
+              <form onSubmit={handleTwoFactorSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label>کد احراز هویت دو مرحله‌ای</Label>
+                  <div className="flex justify-center" dir="ltr">
+                    <InputOTP
+                      maxLength={6}
+                      value={twoFactorCode}
+                      onChange={(value) => setTwoFactorCode(value)}
+                      autoFocus
+                    >
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+                  {errors.twoFactorCode && <p className="text-red-500 text-sm text-center">{errors.twoFactorCode}</p>}
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full bg-gradient-to-br from-teal-400 to-green-400 mt-6"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'در حال تایید...' : 'تایید'}
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full mt-2"
+                  onClick={() => {
+                    setShowTwoFactor(false);
+                    setTwoFactorCode('');
+                    setPendingLoginData(null);
+                    setErrors({});
+                  }}
+                >
+                  بازگشت
+                </Button>
+              </form>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="nationalCode">نام کاربری</Label>
                 <Input
@@ -134,14 +254,15 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
                 {errors.insuranceCode && <p id="insuranceCode-error" className="text-red-500 text-sm">{errors.insuranceCode}</p>}
               </div>
 
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full bg-gradient-to-br from-teal-400 to-green-400 mt-6"
                 disabled={isLoading}
               >
                 {isLoading ? 'در حال ورود...' : 'ورود'}
               </Button>
             </form>
+            )}
 
             <div className="mt-6 text-center">
               <Button

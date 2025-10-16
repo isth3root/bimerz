@@ -3,33 +3,17 @@ import axios from 'axios';
 const api = axios.create({
   baseURL: import.meta.env.VITE_PROD_URI,
   withCredentials: true,
+  timeout: 10000, // 10 second global timeout
 });
-
-// Request interceptor to add token
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
 
 // Response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Don't redirect on 401 - let components handle it
     if (error.response?.status === 401) {
-      // Unauthorized, clear auth and redirect
-      localStorage.removeItem('token');
-      localStorage.removeItem('userType');
-      localStorage.removeItem('userId');
-      localStorage.removeItem('role');
-      window.location.href = '/login';
+      console.log('Unauthorized - not redirecting');
+      // We'll handle this in the AuthContext
     }
     return Promise.reject(error);
   }

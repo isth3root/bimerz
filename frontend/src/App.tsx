@@ -1,5 +1,5 @@
 import { useEffect, lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Toaster } from "sonner";
 import { BlogSection } from './components/BlogSection';
@@ -29,9 +29,13 @@ function ScrollToTop() {
 }
 
 function AppContent() {
-  const { userType, login, logout } = useAuth();
+  const { userType, login, logout, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  if (isLoading) {
+    return <div className='min-h-screen flex items-center justify-center'>در حال بارگذاری...</div>;
+  }
 
   const handleNavigate = (page: string) => {
     if (page === 'rules') {
@@ -52,7 +56,7 @@ function AppContent() {
     }
   };
 
-  const handleLogin = (data: { access_token: string; username: string; role: 'customer' | 'admin' | 'admin-2' | 'admin-3' }) => {
+  const handleLogin = (data: { username: string; role: 'customer' | 'admin' | 'admin-2' | 'admin-3' }) => {
     login(data);
     navigate(data.role === 'customer' ? '/customer-dashboard' : '/admin-dashboard');
   };
@@ -100,13 +104,21 @@ function AppContent() {
           </motion.div>
         </Layout>
       } />
-      <Route path="/login" element={<LoginPage onLogin={handleLogin} onNavigate={handleNavigate} />} />
-      <Route path="/customer-dashboard" element={
-        userType === 'customer' ? <CustomerDashboard onLogout={handleLogout} /> : <NotFound />
-      } />
-      <Route path="/admin-dashboard" element={
-        userType && userType !== 'customer' ? <AdminDashboard onLogout={handleLogout} /> : <NotFound />
-      } />
+          <Route path="/login" element={
+            isAuthenticated ?
+              (userType === 'customer' ? <Navigate to="/customer-dashboard" replace /> : <Navigate to="/admin-dashboard" replace />)
+              : <LoginPage onLogin={handleLogin} onNavigate={handleNavigate} />
+          } />
+          <Route path="/customer-dashboard" element={
+            isAuthenticated && userType === 'customer' ?
+              <CustomerDashboard onLogout={handleLogout} /> :
+              <Navigate to="/login" replace />
+          } />
+          <Route path="/admin-dashboard" element={
+            isAuthenticated && userType && userType !== 'customer' ?
+              <AdminDashboard onLogout={handleLogout} /> :
+              <Navigate to="/login" replace />
+          } />
       <Route path="/about" element={
         <Layout onNavigate={handleNavigate} currentPage={currentPage}>
           <AboutUs />

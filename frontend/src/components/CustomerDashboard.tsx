@@ -88,7 +88,7 @@ interface CustomerDashboardProps {
   onLogout: () => void;
 }
 
-export function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
+export default function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
   const [insurancePolicies, setInsurancePolicies] = useState<Policy[]>([]);
   const [allInstallments, setAllInstallments] = useState<RawInstallment[]>([]);
   const [customer, setCustomer] = useState<Customer | null>(null);

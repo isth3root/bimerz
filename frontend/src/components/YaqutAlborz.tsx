@@ -1,7 +1,19 @@
 import { Button } from "./ui/button";
 import { Download, Calculator, FileCheck, Heart, History, MapPin, CreditCard } from "lucide-react";
 
-export function YaqutAlborz() {
+export default function YaqutAlborz() {
+
+  const VideoEmbed = () => (
+    <div className="relative w-full pt-[56.25%]"> {/* 16:9 ratio */}
+      <iframe
+        src="https://www.aparat.com/video/video/embed/videohash/sxuxh00/vt/frame?titleShow=true"
+        title="ویدیو معرفی یاقوت البرز"
+        allowFullScreen
+        loading="lazy"
+        className="absolute top-0 left-0 w-full h-full"
+      ></iframe>
+    </div>
+  )
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
@@ -55,9 +67,7 @@ export function YaqutAlborz() {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl font-bold mb-8">ویدیو معرفی</h2>
-            <div dangerouslySetInnerHTML={{
-              __html: `<style>.h_iframe-aparat_embed_frame{position:relative;}.h_iframe-aparat_embed_frame .ratio{display:block;width:100%;height:auto;}.h_iframe-aparat_embed_frame iframe{position:absolute;top:0;left:0;width:100%;height:100%;}</style><div class="h_iframe-aparat_embed_frame"><span style="display: block;padding-top: 57%"></span><iframe src="https://www.aparat.com/video/video/embed/videohash/sxuxh00/vt/frame?titleShow=true" allowFullScreen="true" webkitallowfullscreen="true" mozallowfullscreen="true"></iframe></div>`
-            }} />
+            <VideoEmbed />
           </div>
         </div>
       </section>

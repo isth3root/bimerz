@@ -117,6 +117,7 @@ const RulesSection: React.FC = () => {
             onClick={prev}
             className="hidden lg:flex absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 backdrop-blur-sm shadow-xl hover:bg-white border-2 border-blue-200"
             size="icon"
+            aria-label='قبلی'
           >
             <ChevronLeft className="h-6 w-6 text-blue-600" />
           </Button>
@@ -150,6 +151,7 @@ const RulesSection: React.FC = () => {
             onClick={next}
             className="hidden lg:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 backdrop-blur-sm shadow-xl hover:bg-white border-2 border-blue-200"
             size="icon"
+            aria-label='بعدی'
           >
             <ChevronRight className="h-6 w-6 text-green-600" />
           </Button>
@@ -159,6 +161,7 @@ const RulesSection: React.FC = () => {
               onClick={next}
               className="bg-white text-black shadow-lg"
               size="icon"
+              aria-label='بعدی'
             >
               <ChevronRight className="h-6 w-6" />
             </Button>
@@ -166,6 +169,7 @@ const RulesSection: React.FC = () => {
               onClick={prev}
               className="bg-white text-black shadow-lg"
               size="icon"
+              aria-label='قبلی'
             >
               <ChevronLeft className="h-6 w-6" />
             </Button>

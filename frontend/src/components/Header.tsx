@@ -86,7 +86,7 @@ const Header = ({ onNavigate, currentPage }: HeaderProps) => {
 
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
-              <Button className="md:hidden" variant="ghost" size="sm">
+              <Button className="md:hidden" variant="ghost" size="sm" aria-label="باز کردن منو">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>

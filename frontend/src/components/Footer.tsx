@@ -60,6 +60,7 @@ const Footer = () => {
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
                 className="rounded-3xl"
+                title="موقعیت بیمه البرز روی نقشه گوگل"
               ></iframe>
             </div>
           </div>

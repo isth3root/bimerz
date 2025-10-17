@@ -4,7 +4,7 @@ interface OnlineDamageProps {
   onNavigate: (page: string) => void;
 }
 
-export function OnlineDamage({ onNavigate }: OnlineDamageProps) {
+export default function OnlineDamage({ onNavigate }: OnlineDamageProps) {
   return (
     <section className="py-16 bg-gradient-to-br from-teal-300 to-green-300">
       <div className="container mx-auto px-4">

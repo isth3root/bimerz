@@ -128,7 +128,7 @@ interface BlogAPI {
   image_path: string;
 }
 
-export function AdminDashboard({ onLogout }: AdminDashboardProps) {
+export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [policies, setPolicies] = useState<Policy[]>([]);

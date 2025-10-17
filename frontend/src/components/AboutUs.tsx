@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Award, Shield, Heart, Target, TrendingUp, CheckCircle } from "lucide-react";
 
-export function AboutUs() {
+export default function AboutUs() {
   
 
   const values = [

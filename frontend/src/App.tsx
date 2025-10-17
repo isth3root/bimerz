@@ -6,17 +6,17 @@ import { BlogSection } from './components/BlogSection';
 import RulesSection from './components/RulesSection';
 import { FAQSection } from './components/FAQSection';
 import { LoginPage } from './components/LoginPage';
-import { CustomerDashboard } from './components/CustomerDashboard';
-import { AdminDashboard } from './components/AdminDashboard';
-import { AboutUs } from './components/AboutUs';
 import { NotFound } from './components/NotFound';
-import { OnlineDamage } from './components/OnlineDamage';
-import { YaqutAlborz } from './components/YaqutAlborz';
+import { Layout } from './components/Layout';
+import { useAuth } from './contexts/AuthContext';
 
 const Blogs = lazy(() => import('./components/Blogs'));
 const BlogDetail = lazy(() => import('./components/BlogDetail'));
-import { Layout } from './components/Layout';
-import { useAuth } from './contexts/AuthContext';
+const CustomerDashboard = lazy(() => import('./components/CustomerDashboard'));
+const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
+const AboutUs = lazy(() => import('./components/AboutUs'));
+const YaqutAlborz = lazy(() => import('./components/YaqutAlborz'));
+const OnlineDamage = lazy(() => import('./components/OnlineDamage'));
 
 function ScrollToTop() {
   const { pathname } = useLocation();

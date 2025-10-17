@@ -21,6 +21,7 @@ export default function Blogs() {
             <Card key={post.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300 border-0 shadow-md">
               <div className="relative h-48 overflow-hidden">
                 <ImageWithFallback
+                loading="lazy"
                   src={post.image_path ? `${import.meta.env.VITE_PROD_URI}${post.image_path}` : ''}
                   alt={post.title}
                   className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"

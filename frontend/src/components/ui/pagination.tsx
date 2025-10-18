@@ -116,6 +116,68 @@ function PaginationEllipsis({
   );
 }
 
+interface PaginationNumbersProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}
+
+function PaginationNumbers({
+  currentPage,
+  totalPages,
+  onPageChange
+}: PaginationNumbersProps) {
+  const getVisiblePages = () => {
+    const delta = 1; // Show 2 pages before and after current page
+    const range = [];
+    const rangeWithDots = [];
+
+    for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
+      range.push(i);
+    }
+
+    if (currentPage - delta > 2) {
+      rangeWithDots.push(1, '...');
+    } else {
+      rangeWithDots.push(1);
+    }
+
+    rangeWithDots.push(...range);
+
+    if (currentPage + delta < totalPages - 1) {
+      rangeWithDots.push('...', totalPages);
+    } else if (totalPages > 1) {
+      rangeWithDots.push(totalPages);
+    }
+
+    return rangeWithDots;
+  };
+
+  if (totalPages <= 1) return null;
+
+  const visiblePages = getVisiblePages();
+
+  return (
+    <>
+      {visiblePages.map((page, index) => (
+        <PaginationItem key={index}>
+          {page === '...' ? (
+            <PaginationEllipsis />
+          ) : (
+            <PaginationLink
+              isActive={page === currentPage}
+              onClick={() => onPageChange(page as number)}
+              className="cursor-pointer"
+            >
+              {typeof page === 'string' ? page : page.toString()}
+            </PaginationLink>
+          )}
+        </PaginationItem>
+      ))}
+    </>
+  );
+}
+
 export {
   Pagination,
   PaginationContent,
@@ -124,4 +186,5 @@ export {
   PaginationPrevious,
   PaginationNext,
   PaginationEllipsis,
+  PaginationNumbers,
 };

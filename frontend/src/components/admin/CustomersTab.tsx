@@ -28,9 +28,9 @@ import {
   Pagination,
   PaginationContent,
   PaginationItem,
-  PaginationLink,
   PaginationNext,
   PaginationPrevious,
+  PaginationNumbers,
 } from "../ui/pagination";
 import { Skeleton } from "../ui/skeleton";
 import { motion, AnimatePresence } from "framer-motion";
@@ -627,17 +627,11 @@ export function CustomersTab({ customers, setCustomers, loading, token }: Custom
                       className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                     />
                   </PaginationItem>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                    <PaginationItem key={page}>
-                      <PaginationLink
-                        isActive={page === currentPage}
-                        onClick={() => setCurrentPage(page)}
-                        className="cursor-pointer"
-                      >
-                        {toPersianDigits(page.toString())}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
+                  <PaginationNumbers
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                  />
                   <PaginationItem>
                     <PaginationNext
                       onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}

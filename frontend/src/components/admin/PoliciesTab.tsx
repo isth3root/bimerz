@@ -16,9 +16,9 @@ import {
   Pagination,
   PaginationContent,
   PaginationItem,
-  PaginationLink,
   PaginationNext,
   PaginationPrevious,
+  PaginationNumbers,
 } from "../ui/pagination";
 import { Skeleton } from "../ui/skeleton";
 import { motion, AnimatePresence } from "framer-motion";
@@ -922,17 +922,11 @@ export function PoliciesTab({ policies, setPolicies, customers, loadingPolicies,
                       className={currentPagePolicies === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                     />
                   </PaginationItem>
-                  {Array.from({ length: totalPagesPolicies }, (_, i) => i + 1).map(page => (
-                    <PaginationItem key={page}>
-                      <PaginationLink
-                        isActive={page === currentPagePolicies}
-                        onClick={() => setCurrentPagePolicies(page)}
-                        className="cursor-pointer"
-                      >
-                        {toPersianDigits(page.toString())}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
+                  <PaginationNumbers
+                    currentPage={currentPagePolicies}
+                    totalPages={totalPagesPolicies}
+                    onPageChange={setCurrentPagePolicies}
+                  />
                   <PaginationItem>
                     <PaginationNext
                       onClick={() => setCurrentPagePolicies(prev => Math.min(prev + 1, totalPagesPolicies))}

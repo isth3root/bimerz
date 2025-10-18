@@ -36,6 +36,14 @@ import {
   AlertDialogTrigger,
 } from "../ui/alert-dialog";
 import { Slider } from "../ui/slider";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationNumbers,
+} from "../ui/pagination";
 
 interface Installment {
   id: string;
@@ -96,6 +104,9 @@ export function InstallmentsTab({ installments, setInstallments, loadingInstallm
   const [selectedInsuranceType, setSelectedInsuranceType] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [dateSortOrder, setDateSortOrder] = useState<string>("none"); // "none" | "newest" | "oldest"
+
+  const [currentPageInstallments, setCurrentPageInstallments] = useState(1);
+  const itemsPerPageInstallments = 20;
 
   const toPersianDigits = (str: string) => str.replace(/[0-9]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[parseInt(d)]);
 
@@ -312,6 +323,10 @@ export function InstallmentsTab({ installments, setInstallments, loadingInstallm
       return mode === 0 ? cmp : -cmp; // 0: asc, 1: desc
     }
   });
+
+  const totalPagesInstallments = Math.ceil(sortedInstallments.length / itemsPerPageInstallments);
+  const startIndexInstallments = (currentPageInstallments - 1) * itemsPerPageInstallments;
+  const paginatedInstallments = sortedInstallments.slice(startIndexInstallments, startIndexInstallments + itemsPerPageInstallments);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -715,8 +730,8 @@ export function InstallmentsTab({ installments, setInstallments, loadingInstallm
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedInstallments.length > 0 ? (
-                sortedInstallments.map((installment) => (
+              {paginatedInstallments.length > 0 ? (
+                paginatedInstallments.map((installment) => (
                   <TableRow key={installment.id}>
                     <TableCell>
                       <div className="flex gap-2">
@@ -822,6 +837,31 @@ export function InstallmentsTab({ installments, setInstallments, loadingInstallm
               )}
             </TableBody>
           </Table>
+          {sortedInstallments.length > 0 && (
+            <div className="mt-4 flex justify-center">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => setCurrentPageInstallments(prev => Math.max(prev - 1, 1))}
+                      className={currentPageInstallments === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                  <PaginationNumbers
+                    currentPage={currentPageInstallments}
+                    totalPages={totalPagesInstallments}
+                    onPageChange={setCurrentPageInstallments}
+                  />
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => setCurrentPageInstallments(prev => Math.min(prev + 1, totalPagesInstallments))}
+                      className={currentPageInstallments === totalPagesInstallments ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </CardContent>
       </Card>
     </TabsContent>

@@ -466,6 +466,12 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             {/* Desktop buttons - only for admin */}
             {userRole === 'admin' && (
               <div className="hidden md:flex items-center gap-3">
+                <button
+                  className="px-3 py-2 text-sm bg-purple-500 hover:bg-purple-600 text-white rounded-md transition-colors flex items-center gap-2"
+                  onClick={() => window.location.href = '/server-status'}
+                >
+                  وضعیت سرور
+                </button>
                 <Popover open={showBackupPopoverDesktop} onOpenChange={setShowBackupPopoverDesktop}>
                   <PopoverTrigger asChild>
                     <button
@@ -570,6 +576,14 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           {/* Mobile Admin Buttons - only for admin */}
           {userRole === 'admin' && (
             <div className="md:hidden flex flex-col gap-2 mt-4 pt-4 border-t border-white/20">
+              <div className="flex gap-2 justify-center mb-2">
+                <button
+                  className="px-3 py-2 text-sm bg-purple-500 hover:bg-purple-600 text-white rounded-md transition-colors flex items-center gap-2"
+                  onClick={() => window.location.href = '/server-status'}
+                >
+                  وضعیت سرور
+                </button>
+              </div>
               <div className="flex gap-2 justify-center">
                 <Popover open={showBackupPopoverMobile} onOpenChange={setShowBackupPopoverMobile}>
                   <PopoverTrigger asChild>

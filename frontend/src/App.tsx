@@ -14,6 +14,7 @@ const Blogs = lazy(() => import('./components/Blogs'));
 const BlogDetail = lazy(() => import('./components/BlogDetail'));
 const CustomerDashboard = lazy(() => import('./components/CustomerDashboard'));
 const AdminDashboard = lazy(() => import('./components/AdminDashboard'));
+const ServerStatusPage = lazy(() => import('./components/ServerStatusPage'));
 const AboutUs = lazy(() => import('./components/AboutUs'));
 const YaqutAlborz = lazy(() => import('./components/YaqutAlborz'));
 const OnlineDamage = lazy(() => import('./components/OnlineDamage'));
@@ -117,6 +118,11 @@ function AppContent() {
           <Route path="/admin-dashboard" element={
             isAuthenticated && userType && userType !== 'customer' ?
               <AdminDashboard onLogout={handleLogout} /> :
+              <Navigate to="/login" replace />
+          } />
+          <Route path="/server-status" element={
+            isAuthenticated && userType === 'admin' ?
+              <ServerStatusPage /> :
               <Navigate to="/login" replace />
           } />
       <Route path="/about" element={

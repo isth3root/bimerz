@@ -48,15 +48,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (authCheckStarted.current) return;
     authCheckStarted.current = true;
 
-    console.log('🔄 Starting initial auth check...');
-
     const checkAuth = async () => {
       try {
         const response = await api.get('/auth/verify', {
           timeout: 5000
         });
-
-        console.log('✅ User is authenticated:', response.data);
 
         if (response.data.authenticated) {
           const { user } = response.data;
@@ -76,7 +72,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } catch (error: any) {
         // 401 is NORMAL - it means no user is logged in
         if (error.response?.status === 401) {
-          console.log('👤 No user logged in (this is normal)');
           setAuthState({
             userType: null,
             userId: null,
@@ -85,7 +80,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             isLoading: false,
           });
         } else if (error.code === 'ECONNABORTED') {
-          console.log('⏱️ Request timeout (normal for cancelled requests)');
           setAuthState(prev => ({
             ...prev,
             isLoading: false
@@ -109,7 +103,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const login = (data: { username: string; role: UserType }) => {
-    console.log('🔐 User logging in:', data);
     const newState = {
       userType: data.role,
       userId: data.username,
@@ -124,7 +117,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = async () => {
-    console.log('🚪 User logging out');
     try {
       await api.post('/auth/logout');
     } catch (error) {

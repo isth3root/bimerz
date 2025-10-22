@@ -160,6 +160,41 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [restoreTotpCode, setRestoreTotpCode] = useState('');
   const [restoreLoading, setRestoreLoading] = useState(false);
 
+  const fetchCustomersWithSearch = async (searchQuery: string) => {
+    try {
+      const response = await api.get('/admin/customers', {
+        params: { search: searchQuery }
+      });
+
+      const data = response.data;
+      if (!Array.isArray(data)) {
+        console.error('Expected array for customers data');
+        return;
+      }
+      setCustomers(data.map((c: CustomerAPI) => ({
+        id: c.id ? c.id.toString() : '',
+        name: c.full_name,
+        nationalCode: c.national_code,
+        phone: c.phone,
+        email: '',
+        birthDate: c.birth_date || '',
+        joinDate: c.created_at ? new Date(c.created_at).toLocaleDateString('fa-IR') : '',
+        activePolicies: 0, // Calculate or fetch separately
+        status: c.status || 'فعال',
+        score: (c.score as 'A' | 'B' | 'C' | 'D') || 'A',
+        password: c.insurance_code,
+        role: c.role || 'customer',
+      })));
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+      if (error instanceof Error && error.message.includes('401')) {
+        onLogout();
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleBackupClick = () => {
     setShowTotpModal(true);
   };
@@ -309,6 +344,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         setLoading(false);
       }
     };
+
 
     const fetchPolicies = async () => {
       try {
@@ -887,6 +923,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             setCustomers={setCustomers}
             loading={loading}
             token={''}
+            onSearch={fetchCustomersWithSearch}
           />
 
           <PoliciesTab

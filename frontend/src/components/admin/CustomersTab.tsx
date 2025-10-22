@@ -52,9 +52,10 @@ interface CustomersTabProps {
   setCustomers: React.Dispatch<React.SetStateAction<Customer[]>>;
   loading: boolean;
   token: string;
+  onSearch?: (query: string) => void;
 }
 
-export function CustomersTab({ customers, setCustomers, loading, token }: CustomersTabProps) {
+export function CustomersTab({ customers, setCustomers, loading, token, onSearch }: CustomersTabProps) {
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -75,14 +76,7 @@ export function CustomersTab({ customers, setCustomers, loading, token }: Custom
   const [sortBy, setSortBy] = useState<'name' | 'score' | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-
-  const filteredCustomers = customers.filter(
-    (customer) =>
-      customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.nationalCode.includes(searchQuery)
-  );
-
-  const sortedCustomers = [...filteredCustomers].sort((a, b) => {
+  const sortedCustomers = [...customers].sort((a, b) => {
     if (!sortBy) return 0;
     if (sortBy === 'name') {
       const aName = a.name.toLowerCase();
@@ -490,7 +484,12 @@ export function CustomersTab({ customers, setCustomers, loading, token }: Custom
                 placeholder="جستجو در کاربران..."
                 dir="rtl"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  if (onSearch) {
+                    onSearch(e.target.value);
+                  }
+                }}
                 className="pr-10"
               />
             </div>

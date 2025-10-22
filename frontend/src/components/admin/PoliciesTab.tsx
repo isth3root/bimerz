@@ -241,21 +241,27 @@ export function PoliciesTab({ policies, setPolicies, customers, loadingPolicies,
   const handleEditPolicy = async () => {
     if (!editingPolicy) return;
     try {
-      const response = await api.put(`/admin/policies/${editingPolicy.id}`, {
-        customer_national_code: formDataPolicy.customerNationalCode,
-        policy_number: formDataPolicy.policyNumber,
-        insurance_type: formDataPolicy.type,
-        details: formDataPolicy.vehicle,
-        start_date: formDataPolicy.startDate, // Already in Jalaali format
-        premium: formDataPolicy.premium.replace(/,/g, ''),
-        status: formDataPolicy.status,
-        payment_type: formDataPolicy.paymentType,
-        installment_count: formDataPolicy.installmentsCount,
-        installment_type: formDataPolicy.installmentType,
-        first_installment_amount: formDataPolicy.firstInstallmentAmount && formDataPolicy.firstInstallmentAmount.trim() !== '' ? formDataPolicy.firstInstallmentAmount.replace(/,/g, '') : null,
-        payment_id: formDataPolicy.payId,
-        payment_link: formDataPolicy.paymentLink,
-      }, {
+      const formData = new FormData();
+      formData.append('customer_national_code', formDataPolicy.customerNationalCode);
+      formData.append('policy_number', formDataPolicy.policyNumber);
+      formData.append('insurance_type', formDataPolicy.type);
+      formData.append('details', formDataPolicy.vehicle);
+      formData.append('start_date', formDataPolicy.startDate); // Already in Jalaali format
+      formData.append('premium', formDataPolicy.premium.replace(/,/g, ''));
+      formData.append('status', formDataPolicy.status);
+      formData.append('payment_type', formDataPolicy.paymentType);
+      formData.append('installment_count', formDataPolicy.installmentsCount.toString());
+      formData.append('installment_type', formDataPolicy.installmentType);
+      if (formDataPolicy.firstInstallmentAmount && formDataPolicy.firstInstallmentAmount.trim() !== '') {
+        formData.append('first_installment_amount', formDataPolicy.firstInstallmentAmount.replace(/,/g, ''));
+      }
+      formData.append('payment_id', formDataPolicy.payId);
+      formData.append('payment_link', formDataPolicy.paymentLink);
+      if (formDataPolicy.pdfFile) {
+        formData.append('pdf', formDataPolicy.pdfFile);
+      }
+
+      const response = await api.put(`/admin/policies/${editingPolicy.id}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

@@ -11,6 +11,7 @@ import { CustomersTab } from "./admin/CustomersTab";
 import { PoliciesTab } from "./admin/PoliciesTab";
 import { InstallmentsTab } from "./admin/InstallmentsTab";
 import { BlogsTab } from "./admin/BlogsTab";
+import { BirthdaysTab } from "./admin/BirthdaysTab";
 import api from '../utils/api';
 import moment from "moment-jalaali";
 import { User, FileText, CreditCard, Calendar, Download, Upload } from "lucide-react"
@@ -277,7 +278,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   };
 
   const userRole = localStorage.getItem('role') || 'admin';
-  const visibleTabs = userRole === 'admin' ? ['customers', 'policies', 'installments', 'blogs'] :
+  const visibleTabs = userRole === 'admin' ? ['customers', 'policies', 'installments', 'blogs', 'birthdays'] :
     userRole === 'admin-2' ? ['installments', 'blogs'] :
       userRole === 'admin-3' ? ['blogs'] :
         ['customers', 'policies', 'installments', 'blogs'];
@@ -289,6 +290,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     }
     if (userRole === 'admin-3') return 'blogs';
     if (userRole === 'admin-2') return 'installments';
+    if (userRole === 'admin') return 'birthdays';
     return 'customers';
   });
 
@@ -890,7 +892,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           onValueChange={setActiveTab}
           className="space-y-6"
         >
-          <TabsList className={`relative grid w-full ${cols === 1 ? 'grid-cols-1' : cols === 2 ? 'grid-cols-2' : cols === 3 ? 'grid-cols-3' : 'grid-cols-4'} p-1 rounded-lg`}>
+          <TabsList className={`relative grid w-full ${cols === 1 ? 'grid-cols-1' : cols === 2 ? 'grid-cols-2' : cols === 3 ? 'grid-cols-3' : cols === 4 ? 'grid-cols-4' : 'grid-cols-5'} p-1 rounded-lg`}>
             <motion.div
               className="absolute top-1 bottom-1 bg-white rounded-md shadow-sm"
               style={{ width: `calc(${100 / cols}% - 4px)` }}
@@ -925,6 +927,13 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               {" "}
               اخبار
             </TabsTrigger>}
+            {visibleTabs.includes('birthdays') && <TabsTrigger
+              value="birthdays"
+              className="relative z-10 data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+            >
+              {" "}
+              تولدها
+            </TabsTrigger>}
           </TabsList>
 
           <CustomersTab
@@ -958,6 +967,11 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             loadingBlogs={loadingBlogs}
             token={''}
             onLogout={onLogout}
+          />
+
+          <BirthdaysTab
+            customers={customers}
+            loading={loading}
           />
         </Tabs>
       </div>

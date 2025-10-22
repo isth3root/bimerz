@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -72,9 +72,14 @@ export function CustomersTab({ customers, setCustomers, loading, token, onSearch
   const [showCustomerForm, setShowCustomerForm] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(() => localStorage.getItem('customersSearchQuery') || "");
   const [sortBy, setSortBy] = useState<'name' | 'score' | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+  // Persist searchQuery to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('customersSearchQuery', searchQuery);
+  }, [searchQuery]);
 
   const sortedCustomers = [...customers].sort((a, b) => {
     if (!sortBy) return 0;

@@ -83,9 +83,14 @@ export function InstallmentsTab({ installments, setInstallments, loadingInstallm
   const [markAsPaidInstallment, setMarkAsPaidInstallment] = useState<Installment | null>(null);
   const [showAddInstallmentForm, setShowAddInstallmentForm] = useState(false);
 
-  const [installmentSearchQuery, setInstallmentSearchQuery] = useState("");
+  const [installmentSearchQuery, setInstallmentSearchQuery] = useState(() => localStorage.getItem('installmentsSearchQuery') || "");
   const [sortField, setSortField] = useState<string>("");
   const [sortState, setSortState] = useState<Record<string, number>>({});
+
+  // Persist installmentSearchQuery to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('installmentsSearchQuery', installmentSearchQuery);
+  }, [installmentSearchQuery]);
 
   // Filter states for installments
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000000]); // Default range

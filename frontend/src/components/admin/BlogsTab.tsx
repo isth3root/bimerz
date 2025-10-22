@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import {
@@ -64,8 +64,13 @@ export function BlogsTab({ blogs, setBlogs, loadingBlogs, token }: BlogsTabProps
     category: "",
   });
   const [showAddBlogForm, setShowAddBlogForm] = useState(false);
-  const [blogSearchQuery, setBlogSearchQuery] = useState("");
+  const [blogSearchQuery, setBlogSearchQuery] = useState(() => localStorage.getItem('blogsSearchQuery') || "");
   const [deleteBlogId, setDeleteBlogId] = useState<string | null>(null);
+
+  // Persist blogSearchQuery to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('blogsSearchQuery', blogSearchQuery);
+  }, [blogSearchQuery]);
 
   const filteredBlogs = blogs.filter(
     (blog) =>

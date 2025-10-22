@@ -276,20 +276,29 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     }
   };
 
-  const [activeTab, setActiveTab] = useState(() => {
-    const role = localStorage.getItem('role') || 'admin';
-    if (role === 'admin-3') return 'blogs';
-    if (role === 'admin-2') return 'installments';
-    return 'customers';
-  });
-
   const userRole = localStorage.getItem('role') || 'admin';
   const visibleTabs = userRole === 'admin' ? ['customers', 'policies', 'installments', 'blogs'] :
     userRole === 'admin-2' ? ['installments', 'blogs'] :
       userRole === 'admin-3' ? ['blogs'] :
         ['customers', 'policies', 'installments', 'blogs'];
+
+  const [activeTab, setActiveTab] = useState(() => {
+    const savedTab = localStorage.getItem('adminActiveTab');
+    if (savedTab && visibleTabs.includes(savedTab)) {
+      return savedTab;
+    }
+    if (userRole === 'admin-3') return 'blogs';
+    if (userRole === 'admin-2') return 'installments';
+    return 'customers';
+  });
+
   const cols = visibleTabs.length;
   const tabIndex = visibleTabs.indexOf(activeTab);
+
+  // Persist activeTab to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('adminActiveTab', activeTab);
+  }, [activeTab]);
 
   useEffect(() => {
     const fetchBlogs = async () => {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { TabsContent } from "../ui/tabs";
@@ -83,11 +83,16 @@ export function PoliciesTab({ policies, setPolicies, customers, loadingPolicies,
   const [customerSearchResults, setCustomerSearchResults] = useState<Customer[]>([]);
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
 
-  const [policySearchQuery, setPolicySearchQuery] = useState("");
+  const [policySearchQuery, setPolicySearchQuery] = useState(() => localStorage.getItem('policiesSearchQuery') || "");
   const [currentPagePolicies, setCurrentPagePolicies] = useState(1);
   const itemsPerPagePolicies = 10;
   const [policySortField, setPolicySortField] = useState<string>("");
   const [policySortState, setPolicySortState] = useState<Record<string, number>>({});
+
+  // Persist policySearchQuery to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('policiesSearchQuery', policySearchQuery);
+  }, [policySearchQuery]);
 
   const getPolicySortValue = (field: string, item: Policy) => {
     if (field === 'startDate') {

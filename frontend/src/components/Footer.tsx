@@ -75,6 +75,7 @@ const Footer = () => {
           <p className="font-semibold text-xs">تمامی حقوق سایت متعلق به نمایندگی رئیس زاده می باشد</p>
         </div>
       </div>
+          <p className="font-semibold text-center text-md">ساخته شده توسط <a href="https://isth3root.github.io/portfolio/" target="_blank" className="text-xl text-red-500 hover:underline" rel="noopener noreferrer">محمدامین</a></p>
     </footer>
   );
 };

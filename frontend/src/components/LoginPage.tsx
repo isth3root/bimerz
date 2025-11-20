@@ -85,7 +85,7 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
         onLogin(data as { access_token: string; username: string; role: 'customer' | 'admin' | 'admin-2' | 'admin-3' });
       }
     } catch (error: unknown) {
-      console.error('Login error:', error);
+      // console.error('Login error:', error);
       const axiosError = error as { response?: { status: number } };
       if (axiosError.response?.status === 403) {
         toast.error('حساب کاربری شما غیرفعال است. لطفا با ادمین تماس بگیرید.');

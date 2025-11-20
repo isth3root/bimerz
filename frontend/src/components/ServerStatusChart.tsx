@@ -21,7 +21,7 @@ export default function ServerStatusChart() {
     const ws = new WebSocket('wss://api.bimerz.ir/ws/');
 
     ws.onopen = () => {
-      console.log('WebSocket connected');
+      // console.log('WebSocket connected');
       setIsConnected(true);
     };
 
@@ -37,7 +37,7 @@ export default function ServerStatusChart() {
     };
 
     ws.onclose = () => {
-      console.log('WebSocket disconnected');
+      // console.log('WebSocket disconnected');
       setIsConnected(false);
     };
 

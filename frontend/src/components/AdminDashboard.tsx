@@ -169,10 +169,10 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
       const data = response.data;
       if (!Array.isArray(data)) {
-        console.error('Expected array for customers data');
+        // console.error('Expected array for customers data');
         return;
       }
-      setCustomers(data.map((c: CustomerAPI) => ({
+      const fetchedCustomers = data.map((c: CustomerAPI) => ({
         id: c.id ? c.id.toString() : '',
         name: c.full_name,
         nationalCode: c.national_code,
@@ -180,14 +180,22 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         email: '',
         birthDate: c.birth_date || '',
         joinDate: c.created_at ? new Date(c.created_at).toLocaleDateString('fa-IR') : '',
-        activePolicies: 0, // Calculate or fetch separately
+        activePolicies: 0, // Will be updated below
         status: c.status || 'فعال',
         score: (c.score as 'A' | 'B' | 'C' | 'D') || 'A',
         password: c.insurance_code,
         role: c.role || 'customer',
-      })));
+      }));
+
+      // Update activePolicies based on existing policies
+      const updatedCustomers = fetchedCustomers.map(customer => ({
+        ...customer,
+        activePolicies: policies.filter(p => p.customerNationalCode === customer.nationalCode).length,
+      }));
+
+      setCustomers(updatedCustomers);
     } catch (error) {
-      console.error('Error fetching customers:', error);
+      // console.error('Error fetching customers:', error);
       if (error instanceof Error && error.message.includes('401')) {
         onLogout();
       }
@@ -224,7 +232,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       // Refresh the page to show restored data
       window.location.reload();
     } catch (error: unknown) {
-      console.error('Restore error:', error);
+      // console.error('Restore error:', error);
       const axiosError = error as { response?: { status: number } };
       if (axiosError.response?.status === 401) {
         toast.error('کد TOTP نامعتبر است');
@@ -267,7 +275,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       setShowBackupPopoverDesktop(false);
       setShowBackupPopoverMobile(false);
     } catch (error: unknown) {
-      console.error('Backup error:', error);
+      // console.error('Backup error:', error);
       const axiosError = error as { response?: { status: number } };
       if (axiosError.response?.status === 401) {
         toast.error('کد TOTP نامعتبر است');
@@ -329,7 +337,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
         const data = response.data;
         if (!Array.isArray(data)) {
-          console.error('Expected array for customers data');
+          // console.error('Expected array for customers data');
           return;
         }
         setCustomers(data.map((c: CustomerAPI) => ({
@@ -347,7 +355,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           role: c.role || 'customer',
         })));
       } catch (error) {
-        console.error('Error fetching customers:', error);
+        // console.error('Error fetching customers:', error);
         if (error instanceof Error && error.message.includes('401')) {
           onLogout();
         }
@@ -363,7 +371,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
         const data = response.data;
         if (!Array.isArray(data)) {
-          console.error('Expected array for policies data');
+          // console.error('Expected array for policies data');
           return;
         }
         setPolicies(data.map((p: PolicyAPI) => ({
@@ -425,7 +433,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         setStatsLoaded(true);
         setLoadingPolicies(false);
       } catch (error) {
-        console.error('Error fetching policies:', error);
+        // console.error('Error fetching policies:', error);
         if (error instanceof Error && error.message.includes('401')) {
           onLogout();
         }
@@ -442,7 +450,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         const response = await api.get('/admin/installments');
         const data = response.data;
         if (!Array.isArray(data)) {
-          console.error('Expected array for installments data');
+          // console.error('Expected array for installments data');
           return;
         }
         const now = moment();

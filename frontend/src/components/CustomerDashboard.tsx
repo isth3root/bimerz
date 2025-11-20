@@ -107,7 +107,7 @@ export default function CustomerDashboard({ onLogout }: CustomerDashboardProps) 
   useEffect(() => {
     const fetchData = async () => {
       if (!userId) {
-        console.log('No user ID found');
+        // console.log('No user ID found');
         setLoading(false);
         return;
       }
@@ -181,7 +181,7 @@ export default function CustomerDashboard({ onLogout }: CustomerDashboardProps) 
         setAllInstallments(processedInstallments);
         setStats({ overdueCount, nearExpiryPoliciesCount });
       } catch (error: any) {
-        console.error('Error fetching data:', error);
+        // console.error('Error fetching data:', error);
         if (error.response?.status === 401) {
           toast.error("لطفاً مجدداً وارد شوید");
           onLogout();

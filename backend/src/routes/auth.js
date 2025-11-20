@@ -24,7 +24,7 @@ router.post('/login', localAuth, async (req, res) => {
         req.user.two_factor_secret = secret.base32;
         const customerRepository = dataSource.getRepository(Customer);
         await customerRepository.save(req.user);
-        console.log('2FA Secret generated for admin:', secret.otpauth_url);
+        // console.log('2FA Secret generated for admin:', secret.otpauth_url);
         return res.json({
           requires_setup: true,
           secret: secret.base32,
@@ -79,7 +79,7 @@ router.post('/generate-2fa', jwtAuth, async (req, res) => {
     customer.two_factor_secret = secret.base32;
     await customerRepository.save(customer);
 
-    console.log('2FA Secret for admin:', secret.otpauth_url);
+    // console.log('2FA Secret for admin:', secret.otpauth_url);
 
     res.json({
       secret: secret.base32,
@@ -128,7 +128,7 @@ router.post('/verify-2fa', async (req, res) => {
 });
 
 router.get('/verify', jwtAuth, (req, res) => {
-  console.log('✅ Auth verify SUCCESS - user:', req.user);
+  // console.log('✅ Auth verify SUCCESS - user:', req.user);
   res.json({
     authenticated: true,
     user: {

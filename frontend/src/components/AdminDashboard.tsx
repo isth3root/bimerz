@@ -67,6 +67,7 @@ interface Installment {
   installment_number: number;
   payLink?: string;
   customerNationalCode?: string;
+  policyNumber?: string;
 }
 
 interface CustomerAPI {
@@ -111,6 +112,7 @@ interface InstallmentAPI {
   };
   policy?: {
     insurance_type: string;
+    policy_number?: string;
   };
   amount: string;
   due_date: string;
@@ -477,6 +479,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             installment_number: i.installment_number,
             payLink: i.pay_link || '',
             customerNationalCode: i.customer ? i.customer.national_code : '',
+            policyNumber: i.policy ? i.policy.policy_number : '',
           };
         });
         setInstallments(processedInstallments);

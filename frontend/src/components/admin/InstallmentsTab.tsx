@@ -56,6 +56,7 @@ interface Installment {
   installment_number: number;
   payLink?: string;
   customerNationalCode?: string;
+  policyNumber?: string;
 }
 
 interface InstallmentsTabProps {
@@ -107,6 +108,7 @@ export function InstallmentsTab({ installments, setInstallments, loadingInstallm
     }
   }, [installments]);
   const [selectedInsuranceType, setSelectedInsuranceType] = useState<string>("all");
+  const [selectedPolicyNumber, setSelectedPolicyNumber] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [dateSortOrder, setDateSortOrder] = useState<string>("none"); // "none" | "newest" | "oldest"
 
@@ -251,15 +253,20 @@ export function InstallmentsTab({ installments, setInstallments, loadingInstallm
         i.customerName
           .toLowerCase()
           .includes(installmentSearchQuery.toLowerCase()) ||
-        i.policyType.toLowerCase().includes(installmentSearchQuery.toLowerCase());
+        i.policyType.toLowerCase().includes(installmentSearchQuery.toLowerCase())
+        
+        
 
       const matchesPrice = parseFloat(i.amount.replace(/,/g, '')) >= priceRange[0] && parseFloat(i.amount.replace(/,/g, '')) <= priceRange[1];
 
       const matchesType = selectedInsuranceType === "all" || i.policyType === selectedInsuranceType;
 
+      const matchesPolicyNumber = selectedPolicyNumber === "all" ||
+        (i.policyNumber && i.policyNumber.toLowerCase().includes(selectedPolicyNumber.toLowerCase()));
+
       const matchesStatus = selectedStatus === "all" || i.status === selectedStatus;
 
-      return matchesSearch && matchesPrice && matchesType && matchesStatus;
+      return matchesSearch && matchesPrice && matchesType && matchesPolicyNumber && matchesStatus;
     }
   );
 
@@ -614,7 +621,7 @@ export function InstallmentsTab({ installments, setInstallments, loadingInstallm
           {/* Filter Section */}
           <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
             <h3 className="text-lg font-semibold mb-4 text-right">فیلترها</h3>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               {/* Price Range Slider */}
               <div className="space-y-2">
                 <Label className="text-right block">محدوده مبلغ قسط (ریال)</Label>
@@ -646,6 +653,20 @@ export function InstallmentsTab({ installments, setInstallments, loadingInstallm
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* Policy Number Input */}
+              <div className="space-y-2">
+                <Label className="text-right block">شماره بیمه</Label>
+                <Input
+                  placeholder="جستجوی شماره بیمه"
+                  value={selectedPolicyNumber === "all" ? "" : selectedPolicyNumber}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setSelectedPolicyNumber(value || "all");
+                  }}
+                  className="text-right"
+                />
               </div>
 
               {/* Status Select */}
@@ -685,7 +706,7 @@ export function InstallmentsTab({ installments, setInstallments, loadingInstallm
             <div className="relative">
               <Search className="absolute right-3 top-3 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="جستجو بر اساس نام مشتری یا نوع بیمه..."
+                placeholder="جستجو بر اساس نوع بیمه یا نام مشتری..."
                 dir="rtl"
                 value={installmentSearchQuery}
                 onChange={(e) =>

@@ -85,7 +85,6 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
         onLogin(data as { access_token: string; username: string; role: 'customer' | 'admin' | 'admin-2' | 'admin-3' });
       }
     } catch (error: unknown) {
-      // console.error('Login error:', error);
       const axiosError = error as { response?: { status: number } };
       if (axiosError.response?.status === 403) {
         toast.error('حساب کاربری شما غیرفعال است. لطفا با ادمین تماس بگیرید.');
@@ -128,7 +127,6 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-gray-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Header */}
          <div className="text-center mb-8">
            <div className="mx-auto mb-4 w-16 h-16 rounded-full flex items-center justify-center">
              <img src="/logo.png" alt="Logo" className="w-16 h-16 rounded-full object-cover" />
@@ -137,7 +135,6 @@ export function LoginPage({ onLogin, onNavigate }: LoginPageProps) {
            <p className="text-gray-600">ورود به سامانه</p>
          </div>
 
-        {/* Login Card */}
         <Card className="shadow-lg border-0">
           <CardHeader className="text-center pb-4">
             <CardTitle>ورود به حساب کاربری</CardTitle>

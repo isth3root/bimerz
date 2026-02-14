@@ -5,11 +5,9 @@ import { Phone, MapPin } from "lucide-react";
 const Footer = () => {
   return (
     <footer className="bg-gradient-to-br from-teal-400 to-green-400">
-      {/* Main footer content */}
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
 
-          {/* Company info */}
           <div>
             <div className="flex items-center gap-3 mb-6">
               <div className="w-12 h-10 rounded-lg flex items-center justify-center">
@@ -25,7 +23,6 @@ const Footer = () => {
             </p>
           </div>
           
-          {/* Contact info */}
           <div>
             <h4 className="text-lg mb-6 font-semibold">تماس با ما</h4>
             <ul className="space-y-4">
@@ -47,7 +44,6 @@ const Footer = () => {
           </div>
 
 
-          {/* Map */}
           <div className="flex flex-col">
             <p className="font-semibold">موقعیت ما روی نقشه</p>
             <div className="mt-4">
@@ -69,7 +65,6 @@ const Footer = () => {
 
       <Separator className="bg-teal-500" />
 
-      {/* Copyright */}
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row justify-center items-center text-sm">
           <p className="font-semibold text-xs">تمامی حقوق سایت متعلق به نمایندگی رئیس زاده می باشد</p>

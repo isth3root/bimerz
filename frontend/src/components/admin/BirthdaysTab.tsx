@@ -25,32 +25,28 @@ interface BirthdaysTabProps {
 }
 
 export function BirthdaysTab({ customers, loading }: BirthdaysTabProps) {
-  // Get today's Jalaali date in MM/DD format
   const todayJalaali = moment().format('jMM/jDD');
+  const tomorrowJalaali = moment().add(1, 'day').format('jMM/jDD');
 
-  // Filter customers whose birthday is today
   const birthdayCustomers = customers.filter(customer => {
     if (!customer.birthDate) return false;
     const birthJalaali = moment(customer.birthDate, 'jYYYY/jMM/jDD').format('jMM/jDD');
-    return birthJalaali === todayJalaali;
+    return birthJalaali === todayJalaali || birthJalaali === tomorrowJalaali;
   });
-
-  // Today's date in full Jalaali format
-  const todayFull = moment().format('jYYYY/jMM/jDD');
 
   return (
     <TabsContent value="birthdays">
       <Card className="shadow-green-100 shadow-xl ring-2 ring-green-200">
         <CardHeader>
           <div>
-            {loading ? <Skeleton className="h-6 w-32" /> : <CardTitle>تولدهای امروز</CardTitle>}
+            {loading ? <Skeleton className="h-6 w-32" /> : <CardTitle>تولدهای امروز و فردا</CardTitle>}
           </div>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-right">تاریخ امروز</TableHead>
+                <TableHead className="text-right">تاریخ تولد</TableHead>
                 <TableHead className="text-right">شماره تماس</TableHead>
                 <TableHead className="text-right">نام و نام خانوادگی</TableHead>
               </TableRow>
@@ -67,13 +63,13 @@ export function BirthdaysTab({ customers, loading }: BirthdaysTabProps) {
               ) : birthdayCustomers.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={3} className="text-center h-24">
-                    <p className="text-gray-500">هیچ تولدی برای امروز یافت نشد.</p>
+                    <p className="text-gray-500">هیچ تولدی برای امروز یا فردا یافت نشد</p>
                   </TableCell>
                 </TableRow>
               ) : (
                 birthdayCustomers.map((customer) => (
                   <TableRow key={customer.id}>
-                    <TableCell>{todayFull}</TableCell>
+                    <TableCell>{customer.birthDate}</TableCell>
                     <TableCell>{customer.phone}</TableCell>
                     <TableCell>{customer.name}</TableCell>
                   </TableRow>

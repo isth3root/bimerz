@@ -16,7 +16,6 @@ export function Layout({ onNavigate, currentPage, children }: LayoutProps) {
   let pageTitle = defaultTitle;
   const pageDescription = defaultDescription;
 
-  // Customize title and description per route
   if (currentPage === 'blogs') pageTitle = 'وبلاگ | بیمرز';
   if (currentPage.startsWith('blogs/')) pageTitle = 'جزئیات مقاله | بیمرز';
   if (currentPage === 'about') pageTitle = 'درباره ما | بیمرز';

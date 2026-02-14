@@ -78,25 +78,25 @@ const RulesSection: React.FC = () => {
 
   const getCardStyle = (position: number) => {
     switch (position) {
-      case 0: // left
+      case 0:
         return {
           transform: 'translateX(-70%) rotateY(15deg) scale(0.8)',
           zIndex: 1,
           opacity: 0.8,
         };
-      case 1: // center
+      case 1:
         return {
           transform: 'translateX(0) rotateY(0) scale(1)',
           zIndex: 4,
           opacity: 1,
         };
-      case 2: // right
+      case 2:
         return {
           transform: 'translateX(70%) rotateY(-15deg) scale(0.8)',
           zIndex: 1,
           opacity: 0.8,
         };
-      case 3: // behind
+      case 3:
         return {
           transform: 'translateX(0) translateZ(-50px) scale(0.6)',
           zIndex: 2,
@@ -112,7 +112,6 @@ const RulesSection: React.FC = () => {
       <div className="container mx-auto px-4">
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-gray-800">قوانین بیمه</h2>
         <div className="relative">
-          {/* Desktop arrows */}
           <Button
             onClick={prev}
             className="hidden lg:flex absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 backdrop-blur-sm shadow-xl hover:bg-white border-2 border-blue-200"
@@ -155,7 +154,6 @@ const RulesSection: React.FC = () => {
           >
             <ChevronRight className="h-6 w-6 text-green-600" />
           </Button>
-          {/* Mobile arrows below */}
           <div className="flex justify-center gap-4 mt-8 lg:hidden">
             <Button
               onClick={next}

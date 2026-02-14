@@ -13,7 +13,6 @@ const Header = ({ onNavigate, currentPage }: HeaderProps) => {
 
   return (
     <header className="bg-white shadow-sm border-b sticky top-0 z-50">
-      {/* Top bar */}
       <div className="bg-gradient-to-br from-teal-400 to-green-400 py-2">
         <div className="container mx-auto px-4 flex justify-between items-center flex-row-reverse">
           <div className="text-sm text-black font-bold">
@@ -31,7 +30,6 @@ const Header = ({ onNavigate, currentPage }: HeaderProps) => {
         </div>
       </div>
 
-      {/* Main header */}
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between flex-row-reverse">
           <div className="flex items-center gap-3">

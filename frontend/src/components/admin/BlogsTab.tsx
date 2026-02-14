@@ -67,7 +67,6 @@ export function BlogsTab({ blogs, setBlogs, loadingBlogs, token }: BlogsTabProps
   const [blogSearchQuery, setBlogSearchQuery] = useState(() => localStorage.getItem('blogsSearchQuery') || "");
   const [deleteBlogId, setDeleteBlogId] = useState<string | null>(null);
 
-  // Persist blogSearchQuery to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('blogsSearchQuery', blogSearchQuery);
   }, [blogSearchQuery]);
@@ -97,7 +96,6 @@ export function BlogsTab({ blogs, setBlogs, loadingBlogs, token }: BlogsTabProps
           Authorization: `Bearer ${token}`,
         },
       });
-      // Refetch blogs
       const response = await api.get('/blogs');
       const data = response.data.map((blog: BlogAPI) => ({
         id: blog.id.toString(),
@@ -137,7 +135,6 @@ export function BlogsTab({ blogs, setBlogs, loadingBlogs, token }: BlogsTabProps
           Authorization: `Bearer ${token}`,
         },
       });
-      // Refetch blogs
       const response = await api.get('/blogs');
       const data = response.data.map((blog: BlogAPI) => ({
         id: blog.id.toString(),
@@ -173,7 +170,6 @@ export function BlogsTab({ blogs, setBlogs, loadingBlogs, token }: BlogsTabProps
           Authorization: `Bearer ${token}`,
         },
       });
-      // Refetch blogs
       const response = await api.get('/blogs');
       const data = response.data.map((blog: BlogAPI) => ({
         id: blog.id.toString(),
@@ -199,7 +195,7 @@ export function BlogsTab({ blogs, setBlogs, loadingBlogs, token }: BlogsTabProps
       summary: blog.summary,
       content: blog.content,
       date: blog.date,
-      imageFile: null, // For edit, not handling image change yet
+      imageFile: null,
       category: blog.category,
     });
     setShowAddBlogForm(true);
@@ -223,7 +219,6 @@ export function BlogsTab({ blogs, setBlogs, loadingBlogs, token }: BlogsTabProps
           </div>
         </CardHeader>
         <CardContent>
-          {/* Inline Add/Edit Blog Form */}
           <AnimatePresence>
             {showAddBlogForm && (
               <motion.div

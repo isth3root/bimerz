@@ -54,6 +54,7 @@ export interface Installment {
   daysOverdue: number;
   payLink?: string;
   customerNationalCode?: string;
+  policyNumber?: string;
 }
 
 export interface CustomerAPI {

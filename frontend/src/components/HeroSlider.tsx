@@ -44,7 +44,6 @@ export function HeroSlider({ onNavigate }: HeroSliderProps) {
     <div className="relative h-[500px] bg-gradient-to-r from-green-600 to-green-700 overflow-hidden">
       <div className="absolute inset-0 bg-black/20"></div>
       
-      {/* Background image */}
       <div className="absolute inset-0">
         <ImageWithFallback
           src={slides[currentSlide].image}
@@ -53,7 +52,6 @@ export function HeroSlider({ onNavigate }: HeroSliderProps) {
         />
       </div>
 
-      {/* Content */}
       <div className="relative container mx-auto px-4 h-full flex items-center">
         <div className="max-w-2xl text-white">
           <h2 className="text-4xl md:text-5xl mb-4 leading-tight">
@@ -73,7 +71,6 @@ export function HeroSlider({ onNavigate }: HeroSliderProps) {
       </div>
 
 
-      {/* Indicators */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
         {slides.map((_, index) => (
           <button

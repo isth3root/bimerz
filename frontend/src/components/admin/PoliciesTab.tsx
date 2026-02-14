@@ -89,7 +89,6 @@ export function PoliciesTab({ policies, setPolicies, customers, loadingPolicies,
   const [policySortField, setPolicySortField] = useState<string>("");
   const [policySortState, setPolicySortState] = useState<Record<string, number>>({});
 
-  // Persist policySearchQuery to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('policiesSearchQuery', policySearchQuery);
   }, [policySearchQuery]);
@@ -121,7 +120,7 @@ export function PoliciesTab({ policies, setPolicies, customers, loadingPolicies,
       cmp = String(aVal).localeCompare(String(bVal));
     }
     const mode = policySortState[policySortField] || 0;
-    return mode === 0 ? cmp : -cmp; // 0: asc, 1: desc
+    return mode === 0 ? cmp : -cmp;
   });
 
   const totalPagesPolicies = Math.ceil(sortedPolicies.length / itemsPerPagePolicies);
@@ -159,7 +158,6 @@ export function PoliciesTab({ policies, setPolicies, customers, loadingPolicies,
     }
     try {
       const formData = new FormData();
-      // Find customer by nationalCode to get id.
       const customer = customers.find(c => c.nationalCode === formDataPolicy.customerNationalCode);
       if (!customer) {
         toast.error("مشتری یافت نشد.");
@@ -251,7 +249,7 @@ export function PoliciesTab({ policies, setPolicies, customers, loadingPolicies,
       formData.append('policy_number', formDataPolicy.policyNumber);
       formData.append('insurance_type', formDataPolicy.type);
       formData.append('details', formDataPolicy.vehicle);
-      formData.append('start_date', formDataPolicy.startDate); // Already in Jalaali format
+      formData.append('start_date', formDataPolicy.startDate);
       formData.append('premium', formDataPolicy.premium.replace(/,/g, ''));
       formData.append('status', formDataPolicy.status);
       formData.append('payment_type', formDataPolicy.paymentType);
@@ -431,7 +429,6 @@ export function PoliciesTab({ policies, setPolicies, customers, loadingPolicies,
           </div>
         </CardHeader>
         <CardContent>
-          {/* Inline Add/Edit Policy Form */}
           <AnimatePresence>
             {showAddPolicyForm && (
               <motion.div
@@ -850,8 +847,8 @@ export function PoliciesTab({ policies, setPolicies, customers, loadingPolicies,
                 <TableHead onClick={() => handlePolicySort("startDate")} className="cursor-pointer hover:bg-gray-50 text-right">تاریخ شروع</TableHead>
                 <TableHead className="text-right">جزییات بیمه</TableHead>
                 <TableHead className="text-right">نوع بیمه</TableHead>
-                <TableHead className="text-right">نام مشتری</TableHead>
                 <TableHead onClick={() => handlePolicySort("policyNumber")} className="cursor-pointer hover:bg-gray-50 text-right">شماره</TableHead>
+                <TableHead className="text-right">نام مشتری</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -910,8 +907,8 @@ export function PoliciesTab({ policies, setPolicies, customers, loadingPolicies,
                     <TableCell>{policy.startDate}</TableCell>
                     <TableCell>{policy.vehicle}</TableCell>
                     <TableCell>{policy.type}</TableCell>
+                    <TableCell>{policy.policyNumber ? toPersianDigits(policy.policyNumber) : '-'}</TableCell>
                     <TableCell>{policy.customerName}</TableCell>
-                    <TableCell>{policy.policyNumber}</TableCell>
                   </TableRow>
                 ))
               ) : (

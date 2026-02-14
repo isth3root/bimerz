@@ -15,13 +15,11 @@ export default function ServerStatusChart() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch initial data
     fetchData();
 
     const ws = new WebSocket('wss://api.bimerz.ir/ws/');
 
     ws.onopen = () => {
-      // console.log('WebSocket connected');
       setIsConnected(true);
     };
 
@@ -30,14 +28,12 @@ export default function ServerStatusChart() {
       if (message.type === 'server_status_update') {
         setData(prevData => {
           const newData = [...prevData, message.data];
-          // Keep only last 50 data points for performance
           return newData.slice(-50);
         });
       }
     };
 
     ws.onclose = () => {
-      // console.log('WebSocket disconnected');
       setIsConnected(false);
     };
 

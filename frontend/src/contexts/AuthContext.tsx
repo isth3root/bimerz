@@ -40,11 +40,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLoading: true,
   });
 
-  // Use ref to prevent multiple requests
   const authCheckStarted = useRef(false);
 
   useEffect(() => {
-    // Only run auth check once
     if (authCheckStarted.current) return;
     authCheckStarted.current = true;
 
@@ -70,7 +68,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           localStorage.setItem('role', user.role || '');
         }
       } catch (error: any) {
-        // 401 is NORMAL - it means no user is logged in
         if (error.response?.status === 401) {
           setAuthState({
             userType: null,
@@ -92,7 +89,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }));
         }
 
-        // Clear any stale data
         localStorage.removeItem('userType');
         localStorage.removeItem('userId');
         localStorage.removeItem('role');

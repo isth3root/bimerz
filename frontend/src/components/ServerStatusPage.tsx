@@ -6,7 +6,6 @@ export default function ServerStatusPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is main admin
     const role = localStorage.getItem('role');
     if (role !== 'admin') {
       navigate('/admin');
@@ -16,7 +15,6 @@ export default function ServerStatusPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-gradient-to-br from-teal-400 to-green-400 shadow-sm border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -48,7 +46,6 @@ export default function ServerStatusPage() {
               </button>
             </div>
 
-            {/* Mobile exit button */}
             <div className="md:hidden">
               <button
                 className="px-3 py-2 text-sm bg-white/20 hover:bg-white/30 rounded-md transition-colors"
@@ -62,13 +59,11 @@ export default function ServerStatusPage() {
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Page Title */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">وضعیت سرور</h2>
           <p className="text-gray-600">مانیتورینگ لحظه‌ای عملکرد سرور و زمان پاسخ</p>
         </div>
 
-        {/* Chart */}
         <div className="max-w-6xl mx-auto">
           <ServerStatusChart />
         </div>

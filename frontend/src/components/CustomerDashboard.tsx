@@ -1,93 +1,18 @@
 import { useState, useEffect } from 'react';
-import type { ComponentType } from 'react';
 import moment from 'moment-jalaali';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "./ui/dialog";
+import { Dialog,DialogContent,DialogDescription,DialogHeader,DialogTitle} from "./ui/dialog";
 import { toast } from "sonner";
 import api from '../utils/api';
-import {
-  Car,
-  Shield,
-  Flame,
-  User,
-  Calendar,
-  CreditCard,
-  FileText,
-  Phone,
-  LogOut,
-  Copy,
-  Heart,
-  ShieldAlert,
-} from "lucide-react";
-
-interface Customer {
-  id: number;
-  full_name: string;
-  national_code: string;
-  insurance_code: string;
-  phone: string;
-  birth_date: string;
-  score: string;
-  role: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface RawPolicy {
-  id: number;
-  insurance_type: string;
-  details: string;
-  start_date: string | null;
-  end_date: string | null;
-  status: string;
-  payment_type: string;
-  payment_id: string | null;
-  payment_link: string | null;
-  pdf_path: string | null;
-}
-
-interface Policy {
-  id: number;
-  type: string;
-  vehicle: string;
-  startDate: string;
-  endDate: string;
-  status: string;
-  icon: ComponentType<{ className?: string }>;
-  color: string;
-  bgColor: string;
-  isInstallment: boolean;
-  payId: string | undefined;
-  payLink: string | undefined;
-  hasPdf: boolean;
-}
-
-interface RawInstallment {
-  id: number;
-  due_date: string;
-  status: string;
-  pay_link: string;
-  policy_id: number;
-  installment_number: number;
-  amount: string;
-  policy: {
-    insurance_type: string;
-  } | null;
-}
-
-interface CustomerDashboardProps {
-  onLogout: () => void;
-}
-
+import {Car,Shield,Flame,User,Calendar,CreditCard,FileText,Phone,LogOut,Copy,Heart,ShieldAlert} from "lucide-react";
+import { type Customer } from '../types/customer';
+import { type RawPolicy } from '../types/customer';
+import { type Policy } from '../types/customer';
+import { type RawInstallment } from '../types/customer';
+import { type CustomerDashboardProps } from '../types/customer';
 export default function CustomerDashboard({ onLogout }: CustomerDashboardProps) {
   const [insurancePolicies, setInsurancePolicies] = useState<Policy[]>([]);
   const [allInstallments, setAllInstallments] = useState<RawInstallment[]>([]);
@@ -97,26 +22,20 @@ export default function CustomerDashboard({ onLogout }: CustomerDashboardProps) 
     nearExpiryPoliciesCount: 0,
   });
   const [loading, setLoading] = useState(true);
-
   const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);
   const [showInstallmentsDialog, setShowInstallmentsDialog] = useState(false);
-
-  // Remove token from localStorage - using cookies instead
   const userId = localStorage.getItem('userId');
 
   useEffect(() => {
     const fetchData = async () => {
       if (!userId) {
-        // console.log('No user ID found');
         setLoading(false);
         return;
       }
-
       try {
         setLoading(true);
         let nearExpiryPoliciesCount = 0;
         let overdueCount = 0;
-
         const [
           customerData,
           policiesData,
@@ -126,9 +45,7 @@ export default function CustomerDashboard({ onLogout }: CustomerDashboardProps) 
           api.get('/customer/policies').then(res => res.data),
           api.get('/installments/customer').then(res => res.data),
         ]);
-
         setCustomer(customerData);
-
         const policies: Policy[] = policiesData.map((p: RawPolicy) => {
           let icon, color, bgColor;
           switch (p.insurance_type) {
@@ -154,12 +71,11 @@ export default function CustomerDashboard({ onLogout }: CustomerDashboardProps) 
             payId: p.payment_id || undefined,
             payLink: p.payment_link || undefined,
             hasPdf: !!p.pdf_path,
+            policyNumber: p.policy_number || undefined,
           };
         });
-
         nearExpiryPoliciesCount = policies.filter(p => p.status === 'نزدیک انقضا').length;
         setInsurancePolicies(policies);
-
         const processedInstallments: RawInstallment[] = installmentsData.map((inst: RawInstallment) => {
           const momentDueDate = moment(inst.due_date, "jYYYY/jMM/jDD");
           let status = inst.status;
@@ -181,7 +97,6 @@ export default function CustomerDashboard({ onLogout }: CustomerDashboardProps) 
         setAllInstallments(processedInstallments);
         setStats({ overdueCount, nearExpiryPoliciesCount });
       } catch (error: any) {
-        // console.error('Error fetching data:', error);
         if (error.response?.status === 401) {
           toast.error("لطفاً مجدداً وارد شوید");
           onLogout();
@@ -192,10 +107,8 @@ export default function CustomerDashboard({ onLogout }: CustomerDashboardProps) 
         setLoading(false);
       }
     };
-
     fetchData();
   }, [userId, onLogout]);
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'فعال': return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">فعال</Badge>;
@@ -204,7 +117,6 @@ export default function CustomerDashboard({ onLogout }: CustomerDashboardProps) 
       default: return <Badge variant="secondary">{status}</Badge>;
     }
   };
-
   const getPaymentStatusBadge = (status: string) => {
     switch (status) {
       case 'پرداخت شده': return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">پرداخت شده</Badge>;
@@ -213,7 +125,6 @@ export default function CustomerDashboard({ onLogout }: CustomerDashboardProps) 
       default: return <Badge variant="secondary">{status}</Badge>;
     }
   };
-
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -223,7 +134,6 @@ export default function CustomerDashboard({ onLogout }: CustomerDashboardProps) 
       toast.error('خطا در کپی کردن');
     }
   };
-
   const handlePayLink = (link: string | undefined) => {
     if (!link) return;
     let absoluteUrl = link;
@@ -232,7 +142,6 @@ export default function CustomerDashboard({ onLogout }: CustomerDashboardProps) 
     }
     window.open(absoluteUrl, '_blank');
   };
-
   const getScoreDescription = (score: string | undefined) => {
     if (!score) return '';
     switch (score) {
@@ -243,9 +152,7 @@ export default function CustomerDashboard({ onLogout }: CustomerDashboardProps) 
       default: return '';
     }
   };
-
   const toPersianDigits = (str: string) => str.replace(/[0-9]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[parseInt(d)]);
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -256,7 +163,6 @@ export default function CustomerDashboard({ onLogout }: CustomerDashboardProps) 
       </div>
     );
   }
-
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-gradient-to-br from-teal-400 to-green-400 shadow-sm border-b">
@@ -286,13 +192,11 @@ export default function CustomerDashboard({ onLogout }: CustomerDashboardProps) 
           </div>
         </div>
       </header>
-
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h2 className="text-2xl mb-2">خوش آمدید، {customer?.full_name || 'کاربر'}</h2>
           <p className="text-gray-600">وضعیت بیمه‌نامه‌ها و اقساط خود را مشاهده کنید</p>
         </div>
-
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardContent className="p-4">
@@ -366,9 +270,7 @@ export default function CustomerDashboard({ onLogout }: CustomerDashboardProps) 
             </CardContent>
           </Card>
         </div>
-
         <p className="text-center text-red-600 font-bold py-10">وضعیت اقساط پرداخت شده حداکثر ظرف ۷۲ ساعت تایید میگردد</p>
-
         <Card className="mb-8 bg-gradient-to-br from-teal-200 to-green-200">
           <CardHeader>
             <CardTitle>بیمه‌نامه‌های من</CardTitle>
@@ -402,6 +304,11 @@ export default function CustomerDashboard({ onLogout }: CustomerDashboardProps) 
                             {getStatusBadge(policy.status)}
                           </div>
                           <CardTitle className="text-lg">{policy.type}</CardTitle>
+                          {policy.policyNumber && (
+                            <CardDescription className="text-blue-600 font-medium">
+                              شماره بیمه: {toPersianDigits(policy.policyNumber)}
+                            </CardDescription>
+                          )}
                           <CardDescription>{policy.vehicle}</CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col justify-between h-full">
@@ -472,7 +379,6 @@ export default function CustomerDashboard({ onLogout }: CustomerDashboardProps) 
             )}
           </CardContent>
         </Card>
-
         <Card className="mb-8 shadow-green-100 shadow-xl ring-2 ring-green-200">
           <CardHeader>
             <CardTitle>اقساط</CardTitle>
@@ -483,10 +389,11 @@ export default function CustomerDashboard({ onLogout }: CustomerDashboardProps) 
               <TableHeader>
                 <TableRow>
                   <TableHead className='text-right'>بیمه</TableHead>
+                  <TableHead className='text-right'>شماره بیمه</TableHead>
                   <TableHead className='text-right'>وضعیت</TableHead>
                   <TableHead className='text-right'>سررسید</TableHead>
                   <TableHead className='text-right'>مبلغ</TableHead>
-                  <TableHead className='text-right'>شماره</TableHead>
+                  <TableHead className='text-right'>شماره قسط</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -498,6 +405,7 @@ export default function CustomerDashboard({ onLogout }: CustomerDashboardProps) 
                     .map(installment => (
                       <TableRow key={installment.id}>
                         <TableCell>{installment.policy?.insurance_type || 'N/A'}</TableCell>
+                        <TableCell>{installment.policy?.policy_number ? toPersianDigits(installment.policy.policy_number) : '-'}</TableCell>
                         <TableCell>{getPaymentStatusBadge(installment.status)}</TableCell>
                         <TableCell>{toPersianDigits(installment.due_date)}</TableCell>
                         <TableCell>
@@ -508,7 +416,7 @@ export default function CustomerDashboard({ onLogout }: CustomerDashboardProps) 
                     ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center h-24">
+                    <TableCell colSpan={6} className="text-center h-24">
                       شما هیچ قسط پرداخت نشده‌ای ندارید.
                     </TableCell>
                   </TableRow>
@@ -517,7 +425,6 @@ export default function CustomerDashboard({ onLogout }: CustomerDashboardProps) 
             </Table>
           </CardContent>
         </Card>
-
         <Dialog open={showInstallmentsDialog} onOpenChange={setShowInstallmentsDialog}>
           <DialogContent className="max-w-4xl">
             <DialogHeader>

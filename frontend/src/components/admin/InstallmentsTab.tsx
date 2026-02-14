@@ -88,16 +88,13 @@ export function InstallmentsTab({ installments, setInstallments, loadingInstallm
   const [sortField, setSortField] = useState<string>("");
   const [sortState, setSortState] = useState<Record<string, number>>({});
 
-  // Persist installmentSearchQuery to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('installmentsSearchQuery', installmentSearchQuery);
   }, [installmentSearchQuery]);
 
-  // Filter states for installments
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000000]); // Default range
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000000]);
   const [priceMinMax, setPriceMinMax] = useState({min: 0, max: 10000000});
 
-  // Update price range min/max based on installments data
   useEffect(() => {
     if (installments.length > 0) {
       const amounts = installments.map(i => parseFloat(i.amount.replace(/,/g, '')));
@@ -110,7 +107,7 @@ export function InstallmentsTab({ installments, setInstallments, loadingInstallm
   const [selectedInsuranceType, setSelectedInsuranceType] = useState<string>("all");
   const [selectedPolicyNumber, setSelectedPolicyNumber] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
-  const [dateSortOrder, setDateSortOrder] = useState<string>("none"); // "none" | "newest" | "oldest"
+  const [dateSortOrder, setDateSortOrder] = useState<string>("none");
 
   const [currentPageInstallments, setCurrentPageInstallments] = useState(1);
   const itemsPerPageInstallments = 20;
@@ -134,7 +131,7 @@ export function InstallmentsTab({ installments, setInstallments, loadingInstallm
       ...formDataInstallment,
       status: "معوق",
       daysOverdue: 0,
-      installment_number: 1, // Default for new installments
+      installment_number: 1,
     };
     setInstallments([...installments, newInstallment]);
     setFormDataInstallment({
@@ -152,14 +149,12 @@ export function InstallmentsTab({ installments, setInstallments, loadingInstallm
   const handleEditInstallment = async () => {
     if (!editingInstallment) return;
     try {
-      // Find the original installment to get policy_id and customer_id
       const originalInstallment = installments.find(i => i.id === editingInstallment.id);
       if (!originalInstallment) {
         toast.error('قسط مورد نظر یافت نشد');
         return;
       }
 
-      // Prepare the update data according to backend entity structure
       const updateData = {
         amount: parseFloat(formDataInstallment.amount.replace(/,/g, '')),
         due_date: formDataInstallment.dueDate, // Already in Jalaali format
@@ -173,24 +168,26 @@ export function InstallmentsTab({ installments, setInstallments, loadingInstallm
         },
       });
 
-        // Update local state with the response
-        setInstallments(
-          installments.map((i) =>
-            i.id === editingInstallment.id
-              ? {
-                  ...i,
-                  amount: formDataInstallment.amount,
-                  dueDate: formDataInstallment.dueDate,
-                  payLink: formDataInstallment.payLink,
-                  status: formDataInstallment.status,
-                  // Keep the original customer and policy info
-                  customerName: i.customerName,
-                  customerNationalCode: i.customerNationalCode,
-                  policyType: i.policyType,
-                }
-              : i
-          )
-        );
+      const response = await api.get('/admin/installments', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      const processedInstallments = response.data.map((i: any) => {
+        return {
+          id: i.id.toString(),
+          customerName: i.customer ? i.customer.full_name : 'Unknown',
+          policyType: i.policy ? i.policy.insurance_type : 'Unknown',
+          amount: i.amount.toString(),
+          dueDate: i.due_date,
+          status: i.status,
+          daysOverdue: i.daysOverdue || 0,
+          installment_number: i.installment_number,
+          payLink: i.pay_link || '',
+          customerNationalCode: i.customer ? i.customer.national_code : '',
+          policyNumber: i.policy ? i.policy.policy_number : '',
+        };
+      });
+      setInstallments(processedInstallments);
 
         toast.success("قسط با موفقیت بروزرسانی شد.");
         setFormDataInstallment({
@@ -289,9 +286,9 @@ export function InstallmentsTab({ installments, setInstallments, loadingInstallm
   const getSortValue = (field: string, item: Installment) => {
     if (field === 'status') {
       const orders = [
-        ['معوق', 'آینده', 'پرداخت شده'], // 0: overdue first
-        ['آینده', 'معوق', 'پرداخت شده'], // 1: future first
-        ['پرداخت شده', 'معوق', 'آینده'], // 2: paid first
+        ['معوق', 'آینده', 'پرداخت شده'],
+        ['آینده', 'معوق', 'پرداخت شده'],
+        ['پرداخت شده', 'معوق', 'آینده'],
       ];
       const order = orders[sortState[field] || 0];
       return order.indexOf(item.status);
@@ -305,18 +302,16 @@ export function InstallmentsTab({ installments, setInstallments, loadingInstallm
   };
 
   const sortedInstallments = [...filteredInstallments].sort((a, b) => {
-    // First apply date sort if selected
     if (dateSortOrder !== 'none') {
       const aDate = new Date(a.dueDate).getTime();
       const bDate = new Date(b.dueDate).getTime();
       if (dateSortOrder === 'newest') {
-        return bDate - aDate; // newest first
+        return bDate - aDate;
       } else if (dateSortOrder === 'oldest') {
-        return aDate - bDate; // oldest first
+        return aDate - bDate;
       }
     }
 
-    // Then apply table sort
     if (!sortField) return 0;
     const aVal = getSortValue(sortField, a);
     const bVal = getSortValue(sortField, b);
@@ -330,9 +325,9 @@ export function InstallmentsTab({ installments, setInstallments, loadingInstallm
     if (sortField === 'status') {
       return cmp;
     } else if (sortField === 'amount') {
-      return mode === 0 ? -cmp : cmp; // 0: desc, 1: asc
+      return mode === 0 ? -cmp : cmp;
     } else {
-      return mode === 0 ? cmp : -cmp; // 0: asc, 1: desc
+      return mode === 0 ? cmp : -cmp;
     }
   });
 
@@ -394,7 +389,6 @@ export function InstallmentsTab({ installments, setInstallments, loadingInstallm
           </div>
         </CardHeader>
         <CardContent>
-          {/* Inline Add/Edit Installment Form */}
           <AnimatePresence>
             {showAddInstallmentForm && (
               <motion.div
@@ -409,7 +403,6 @@ export function InstallmentsTab({ installments, setInstallments, loadingInstallm
                   {editingInstallment ? "ویرایش قسط" : "افزودن قسط"}
                 </h3>
               <div className="grid gap-4 py-2">
-                {/* Show customer and policy info as read-only when editing */}
                 {editingInstallment && (
                   <>
                     <div className="grid grid-cols-4 items-center gap-4">
@@ -433,7 +426,6 @@ export function InstallmentsTab({ installments, setInstallments, loadingInstallm
                   </>
                 )}
 
-                {/* Show input fields for new installment */}
                 {!editingInstallment && (
                   <>
                     <div className="grid grid-cols-4 items-center gap-4">
@@ -618,11 +610,9 @@ export function InstallmentsTab({ installments, setInstallments, loadingInstallm
             )}
           </AnimatePresence>
 
-          {/* Filter Section */}
           <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
             <h3 className="text-lg font-semibold mb-4 text-right">فیلترها</h3>
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              {/* Price Range Slider */}
               <div className="space-y-2">
                 <Label className="text-right block">محدوده مبلغ قسط (ریال)</Label>
                 <Slider
@@ -639,7 +629,6 @@ export function InstallmentsTab({ installments, setInstallments, loadingInstallm
                 </div>
               </div>
 
-              {/* Insurance Type Select */}
               <div className="space-y-2">
                 <Label className="text-right block">نوع بیمه</Label>
                 <Select value={selectedInsuranceType} onValueChange={setSelectedInsuranceType}>
@@ -655,7 +644,6 @@ export function InstallmentsTab({ installments, setInstallments, loadingInstallm
                 </Select>
               </div>
 
-              {/* Policy Number Input */}
               <div className="space-y-2">
                 <Label className="text-right block">شماره بیمه</Label>
                 <Input
@@ -669,7 +657,6 @@ export function InstallmentsTab({ installments, setInstallments, loadingInstallm
                 />
               </div>
 
-              {/* Status Select */}
               <div className="space-y-2">
                 <Label className="text-right block">وضعیت</Label>
                 <Select value={selectedStatus} onValueChange={setSelectedStatus}>
@@ -685,7 +672,6 @@ export function InstallmentsTab({ installments, setInstallments, loadingInstallm
                 </Select>
               </div>
 
-              {/* Date Sort */}
               <div className="space-y-2">
                 <Label className="text-right block"> بر اساس سررسید</Label>
                 <Select value={dateSortOrder} onValueChange={setDateSortOrder}>
@@ -747,6 +733,7 @@ export function InstallmentsTab({ installments, setInstallments, loadingInstallm
                 >
                   نوع بیمه
                 </TableHead>
+                <TableHead className="text-right">شماره بیمه</TableHead>
                 <TableHead
                   onClick={() => handleSort("customerName")}
                   className="cursor-pointer hover:bg-gray-50 text-right"
@@ -851,12 +838,13 @@ export function InstallmentsTab({ installments, setInstallments, loadingInstallm
                     <TableCell>{installment.dueDate}</TableCell>
                     <TableCell>{toPersianDigits(formatPrice(installment.amount))}</TableCell>
                     <TableCell>{installment.policyType}</TableCell>
+                    <TableCell>{installment.policyNumber ? toPersianDigits(installment.policyNumber) : '-'}</TableCell>
                     <TableCell>{installment.customerName}</TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center h-24">
+                  <TableCell colSpan={9} className="text-center h-24">
                     هیچ قسطی یافت نشد.
                   </TableCell>
                 </TableRow>

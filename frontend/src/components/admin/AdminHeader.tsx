@@ -97,7 +97,7 @@ export function AdminHeader({ userRole, stats, statsLoaded, onLogout, token }: A
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 mb-2">کل مقالات</p>
-                  <p className="text-3xl">۰</p> {/* This would need to be passed */}
+                  <p className="text-3xl">۰</p>
                   <p className="text-sm text-green-600 mt-1">آمار به‌روز</p>
                 </div>
                 <FileText className="h-8 w-8 text-blue-600" />
@@ -109,7 +109,7 @@ export function AdminHeader({ userRole, stats, statsLoaded, onLogout, token }: A
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 mb-2">امتیاز شما</p>
-                  <p className="text-3xl">۰</p> {/* This would need user score */}
+                  <p className="text-3xl">۰</p>
                   <p className="text-sm text-green-600 mt-1">امتیاز شخصی</p>
                 </div>
                 <Users className="h-8 w-8 text-blue-600" />
@@ -148,7 +148,7 @@ export function AdminHeader({ userRole, stats, statsLoaded, onLogout, token }: A
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 mb-2">امتیاز شما</p>
-                  <p className="text-3xl">۰</p> {/* This would need user score */}
+                  <p className="text-3xl">۰</p>
                   <p className="text-sm text-green-600 mt-1">امتیاز شخصی</p>
                 </div>
                 <Users className="h-8 w-8 text-blue-600" />

@@ -4,7 +4,7 @@ import { Download, Calculator, FileCheck, Heart, History, MapPin, CreditCard } f
 export default function YaqutAlborz() {
 
   const VideoEmbed = () => (
-    <div className="relative w-full pt-[56.25%]"> {/* 16:9 ratio */}
+    <div className="relative w-full pt-[56.25%]">
       <iframe
         src="https://www.aparat.com/video/video/embed/videohash/sxuxh00/vt/frame?titleShow=true"
         title="ویدیو معرفی یاقوت البرز"
@@ -16,7 +16,6 @@ export default function YaqutAlborz() {
   )
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
       <section className="bg-gradient-to-br from-teal-400 to-green-400 text-white py-20">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">یاقوت البرز</h1>
@@ -27,7 +26,6 @@ export default function YaqutAlborz() {
       </section>
 
 
-      {/* Features Section */}
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
@@ -62,7 +60,6 @@ export default function YaqutAlborz() {
         </div>
       </section>
 
-      {/* Video Section */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
@@ -72,7 +69,6 @@ export default function YaqutAlborz() {
         </div>
       </section>
 
-      {/* Damage Registration Section */}
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
@@ -88,7 +84,6 @@ export default function YaqutAlborz() {
             </p>
           </div>
         </div>
-      {/* Content */}
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
@@ -107,7 +102,6 @@ export default function YaqutAlborz() {
         </div>
       </section>
 
-      {/* Download Section */}
       <section className=" bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">

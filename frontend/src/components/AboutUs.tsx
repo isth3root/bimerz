@@ -52,14 +52,12 @@ export default function AboutUs() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
       <section className="bg-gradient-to-br from-teal-400 to-green-400 text-white py-20">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">درباره بیمه البرز</h1>
         </div>
       </section>
 
-      {/* Company History Section */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
@@ -86,7 +84,6 @@ export default function AboutUs() {
         </div>
       </section>
 
-      {/* Values Section */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -112,7 +109,6 @@ export default function AboutUs() {
         </div>
       </section>
 
-      {/* Mission & Vision */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">

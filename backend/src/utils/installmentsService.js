@@ -94,6 +94,34 @@ class InstallmentsService {
       }
     }
 
+    // If amount decreased, add the difference to subsequent installments (carry over unpaid amount)
+    if (difference < 0) {
+      const remainingDifference = Math.abs(difference);
+
+      // Find subsequent installments for the same policy, ordered by installment_number
+      const subsequentInstallments = await installmentRepository.find({
+        where: {
+          policy_id: currentInstallment.policy_id,
+          installment_number: MoreThan(currentInstallment.installment_number)
+        },
+        order: {
+          installment_number: 'ASC'
+        }
+      });
+
+      for (const subInst of subsequentInstallments) {
+        const subAmount = parseFloat(subInst.amount);
+        const newSubAmount = subAmount + remainingDifference;
+
+        // Add the remaining difference to this installment
+        await installmentRepository.update(subInst.id, {
+          amount: newSubAmount
+        });
+        // Break after adding to the first subsequent installment
+        break;
+      }
+    }
+
     return this.findOne(id);
   }
 

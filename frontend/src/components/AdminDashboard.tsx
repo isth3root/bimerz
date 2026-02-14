@@ -162,6 +162,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [restoreFile, setRestoreFile] = useState<File | null>(null);
   const [restoreTotpCode, setRestoreTotpCode] = useState('');
   const [restoreLoading, setRestoreLoading] = useState(false);
+  const [birthdayCount, setBirthdayCount] = useState(0);
 
   const fetchCustomersWithSearch = async (searchQuery: string) => {
     try {
@@ -171,7 +172,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
       const data = response.data;
       if (!Array.isArray(data)) {
-        // console.error('Expected array for customers data');
         return;
       }
       const fetchedCustomers = data.map((c: CustomerAPI) => ({
@@ -182,14 +182,13 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         email: '',
         birthDate: c.birth_date || '',
         joinDate: c.created_at ? new Date(c.created_at).toLocaleDateString('fa-IR') : '',
-        activePolicies: 0, // Will be updated below
+        activePolicies: 0,
         status: c.status || 'فعال',
         score: (c.score as 'A' | 'B' | 'C' | 'D') || 'A',
         password: c.insurance_code,
         role: c.role || 'customer',
       }));
 
-      // Update activePolicies based on existing policies
       const updatedCustomers = fetchedCustomers.map(customer => ({
         ...customer,
         activePolicies: policies.filter(p => p.customerNationalCode === customer.nationalCode).length,
@@ -197,7 +196,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
       setCustomers(updatedCustomers);
     } catch (error) {
-      // console.error('Error fetching customers:', error);
       if (error instanceof Error && error.message.includes('401')) {
         onLogout();
       }
@@ -231,10 +229,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       setRestoreTotpCode('');
       setRestoreFile(null);
 
-      // Refresh the page to show restored data
       window.location.reload();
     } catch (error: unknown) {
-      // console.error('Restore error:', error);
       const axiosError = error as { response?: { status: number } };
       if (axiosError.response?.status === 401) {
         toast.error('کد TOTP نامعتبر است');
@@ -253,7 +249,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     }
 
     try {
-      // Proceed with backup including TOTP code
       const response = await api.post('/admin/backup', {
         ...backupFilters,
         totp_code: totpCode,
@@ -277,7 +272,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       setShowBackupPopoverDesktop(false);
       setShowBackupPopoverMobile(false);
     } catch (error: unknown) {
-      // console.error('Backup error:', error);
       const axiosError = error as { response?: { status: number } };
       if (axiosError.response?.status === 401) {
         toast.error('کد TOTP نامعتبر است');
@@ -304,10 +298,13 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     return 'customers';
   });
 
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+  };
+
   const cols = visibleTabs.length;
   const tabIndex = visibleTabs.indexOf(activeTab);
 
-  // Persist activeTab to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('adminActiveTab', activeTab);
   }, [activeTab]);
@@ -339,7 +336,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
         const data = response.data;
         if (!Array.isArray(data)) {
-          // console.error('Expected array for customers data');
           return;
         }
         setCustomers(data.map((c: CustomerAPI) => ({
@@ -350,14 +346,13 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           email: '',
           birthDate: c.birth_date || '',
           joinDate: c.created_at ? new Date(c.created_at).toLocaleDateString('fa-IR') : '',
-          activePolicies: 0, // Calculate or fetch separately
+          activePolicies: 0,
           status: c.status || 'فعال',
           score: (c.score as 'A' | 'B' | 'C' | 'D') || 'A',
           password: c.insurance_code,
           role: c.role || 'customer',
         })));
       } catch (error) {
-        // console.error('Error fetching customers:', error);
         if (error instanceof Error && error.message.includes('401')) {
           onLogout();
         }
@@ -373,7 +368,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
         const data = response.data;
         if (!Array.isArray(data)) {
-          // console.error('Expected array for policies data');
           return;
         }
         setPolicies(data.map((p: PolicyAPI) => ({
@@ -396,7 +390,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           pdfFile: null,
         })));
 
-        // Update customers with active policies count
         setCustomers(prevCustomers =>
           prevCustomers.map(customer => ({
             ...customer,
@@ -404,38 +397,30 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           }))
         );
 
-        // Fetch stats
         const [
           customersCountData,
-          policiesCountData,
-          overdueData,
           nearExpiryData,
           nearExpiryInstallmentsData,
         ] = await Promise.all([
           api.get('/admin/customers/count').then(res => res.data).catch(() => 0),
-          api.get('/count').then(res => res.data).catch(() => 0),
-          api.get('/installments/overdue/count').then(res => res.data).catch(() => 0),
           api.get('/admin/policies/near-expiry/count').then(res => res.data).catch(() => 0),
           api.get('/installments/near-expiry/count').then(res => res.data).catch(() => 0),
         ]);
 
         const customersCount = typeof customersCountData === 'object' && customersCountData.count !== undefined ? customersCountData.count : customersCountData;
-        const policiesCount = typeof policiesCountData === 'object' && policiesCountData.count !== undefined ? policiesCountData.count : policiesCountData;
-        const overdueInstallmentsCount = typeof overdueData === 'object' && overdueData.count !== undefined ? overdueData.count : overdueData;
         const nearExpiryPoliciesCount = typeof nearExpiryData === 'object' && nearExpiryData.count !== undefined ? nearExpiryData.count : nearExpiryData;
         const nearExpiryInstallmentsCount = typeof nearExpiryInstallmentsData === 'object' && nearExpiryInstallmentsData.count !== undefined ? nearExpiryInstallmentsData.count : nearExpiryInstallmentsData;
 
         setStats({
           customersCount,
-          policiesCount,
-          overdueInstallmentsCount,
+          policiesCount: 0,
+          overdueInstallmentsCount: 0,
           nearExpiryPoliciesCount,
           nearExpiryInstallmentsCount,
         });
         setStatsLoaded(true);
         setLoadingPolicies(false);
       } catch (error) {
-        // console.error('Error fetching policies:', error);
         if (error instanceof Error && error.message.includes('401')) {
           onLogout();
         }
@@ -452,7 +437,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         const response = await api.get('/admin/installments');
         const data = response.data;
         if (!Array.isArray(data)) {
-          // console.error('Expected array for installments data');
           return;
         }
         const now = moment();
@@ -494,9 +478,20 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
     }
   }, [customers, policies]);
 
+  useEffect(() => {
+    const todayJalaali = moment().format('jMM/jDD');
+    const tomorrowJalaali = moment().add(1, 'day').format('jMM/jDD');
+    
+    const birthdayCustomers = customers.filter(customer => {
+      if (!customer.birthDate) return false;
+      const birthJalaali = moment(customer.birthDate, 'jYYYY/jMM/jDD').format('jMM/jDD');
+      return birthJalaali === todayJalaali || birthJalaali === tomorrowJalaali;
+    });
+    setBirthdayCount(birthdayCustomers.length);
+  }, [customers]);
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-gradient-to-br from-teal-400 to-green-400 shadow-sm border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -521,7 +516,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               </div>
             </div>
 
-            {/* Desktop buttons - only for admin */}
             {userRole === 'admin' && (
               <div className="hidden md:flex items-center gap-3">
                 <button
@@ -608,7 +602,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               </div>
             )}
 
-            {/* Exit button only for non-admin users on desktop */}
             {userRole !== 'admin' && (
               <div className="hidden md:block">
                 <button
@@ -620,7 +613,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               </div>
             )}
 
-            {/* Mobile exit button for all users */}
             <div className="md:hidden">
               <button
                 className="px-3 py-2 text-sm bg-white/20 hover:bg-white/30 rounded-md transition-colors"
@@ -631,7 +623,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             </div>
           </div>
 
-          {/* Mobile Admin Buttons - only for admin */}
           {userRole === 'admin' && (
             <div className="md:hidden flex flex-col gap-2 mt-4 pt-4 border-t border-white/20">
               <div className="flex gap-2 justify-center mb-2">
@@ -718,7 +709,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Welcome Section */}
         <div className="mb-8">
           {loading ? (
             <>
@@ -733,7 +723,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           )}
         </div>
 
-        {/* Stats Cards */}
         {userRole === 'admin-3' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
             {!loadingBlogs ? (
@@ -847,60 +836,80 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
               ))
             ) : (
               <>
-                <div className="bg-white p-6 rounded-lg shadow-sm border">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600 mb-2">کل مشتریان</p>
-                      <p className="text-3xl">{customers.filter(c => (c.role || 'customer') === 'customer').length.toString()}</p>
-                      <p className="text-sm text-green-600 mt-1">آمار به‌روز</p>
-                    </div>
-                    <span className="text-blue-600 w-8 h-8"><User /></span>
-                  </div>
-                </div>
+                {(() => {
+                  const now = new Date();
+                  const oneMonthFromNow = new Date();
+                  oneMonthFromNow.setMonth(now.getMonth() + 1);
 
-                <div className="bg-white p-6 rounded-lg shadow-sm border">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600 mb-2">
-                        بیمه‌نامه‌های فعال
-                      </p>
-                      <p className="text-3xl">{stats.policiesCount.toString()}</p>
-                      <p className="text-sm text-green-600 mt-1">آمار به‌روز</p>
-                    </div>
-                    <FileText className="text-green-600" />
-                  </div>
-                </div>
+                  const activeAndNearExpiryPolicies = policies.filter(policy => {
+                    if (!policy.endDate) return true;
+                    const endDateMoment = moment(policy.endDate, 'jYYYY/jMM/jDD');
+                    const nowMoment = moment(now);
+                    return !endDateMoment.isBefore(nowMoment);
+                  }).length;
 
-                <div className="bg-white p-6 rounded-lg shadow-sm border">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600 mb-2">اقساط معوق</p>
-                      <p className="text-3xl text-red-600">{stats.overdueInstallmentsCount.toString()}</p>
-                      <p className="text-sm text-red-600 mt-1">آمار به‌روز</p>
-                    </div>
-                    <CreditCard className="text-red-600" />
-                  </div>
-                </div>
+                  const overdueInstallmentsCount = installments.filter(
+                    inst => inst.status === 'معوق'
+                  ).length;
 
-                <div className="bg-white p-6 rounded-lg shadow-sm border">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600 mb-2">بیمه های نزدیک به انقضا</p>
-                      <p className="text-3xl text-yellow-600">{stats.nearExpiryPoliciesCount.toString()}</p>
-                      <p className="text-sm text-yellow-600 mt-1">در ۳۰ روز آینده</p>
-                    </div>
-                    <Calendar className="text-yellow-600" />
-                  </div>
-                </div>
+                  return (
+                    <>
+                      <div className="bg-white p-6 rounded-lg shadow-sm border">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-gray-600 mb-2">کل مشتریان</p>
+                            <p className="text-3xl">{customers.filter(c => (c.role || 'customer') === 'customer').length.toString()}</p>
+                            <p className="text-sm text-green-600 mt-1">آمار به‌روز</p>
+                          </div>
+                          <span className="text-blue-600"><User className="w-10 h-10" /></span>
+                        </div>
+                      </div>
+
+                      <div className="bg-white p-6 rounded-lg shadow-sm border">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-gray-600 mb-2">
+                              بیمه‌نامه‌های فعال
+                            </p>
+                            <p className="text-3xl">{activeAndNearExpiryPolicies.toString()}</p>
+                            <p className="text-sm text-green-600 mt-1">آمار به‌روز</p>
+                          </div>
+                          <FileText className="text-green-600 w-10 h-10" />
+                        </div>
+                      </div>
+
+                      <div className="bg-white p-6 rounded-lg shadow-sm border">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-gray-600 mb-2">اقساط معوق</p>
+                            <p className="text-3xl text-red-600">{overdueInstallmentsCount.toString()}</p>
+                            <p className="text-sm text-red-600 mt-1">آمار به‌روز</p>
+                          </div>
+                          <CreditCard className="text-red-600 w-10 h-10" />
+                        </div>
+                      </div>
+
+                      <div className="bg-white p-6 rounded-lg shadow-sm border">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-gray-600 mb-2">بیمه های نزدیک به انقضا</p>
+                            <p className="text-3xl text-yellow-600">{stats.nearExpiryPoliciesCount.toString()}</p>
+                            <p className="text-sm text-yellow-600 mt-1">در ۳۰ روز آینده</p>
+                          </div>
+                          <Calendar className="text-yellow-600 w-10 h-10" />
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
               </>
             )}
           </div>
         )}
 
-        {/* Management Tabs */}
         <Tabs
           value={activeTab}
-          onValueChange={setActiveTab}
+          onValueChange={handleTabChange}
           className="space-y-6"
         >
           <TabsList className={`relative grid w-full ${cols === 1 ? 'grid-cols-1' : cols === 2 ? 'grid-cols-2' : cols === 3 ? 'grid-cols-3' : cols === 4 ? 'grid-cols-4' : 'grid-cols-5'} p-1 rounded-lg`}>
@@ -944,6 +953,11 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             >
               {" "}
               تولدها
+              {birthdayCount > 0 && (
+                <span className="mr-2 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                  {birthdayCount}
+                </span>
+              )}
             </TabsTrigger>}
           </TabsList>
 
@@ -987,7 +1001,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         </Tabs>
       </div>
 
-      {/* TOTP Modal for Backup */}
       <Dialog open={showTotpModal} onOpenChange={setShowTotpModal}>
         <DialogContent>
           <DialogHeader>
@@ -1033,7 +1046,6 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         </DialogContent>
       </Dialog>
 
-      {/* Restore Modal */}
       <Dialog open={showRestoreModal} onOpenChange={setShowRestoreModal}>
         <DialogContent>
           <DialogHeader>

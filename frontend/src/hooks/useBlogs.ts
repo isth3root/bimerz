@@ -61,8 +61,6 @@ export function useBlogs() {
   }, []);
 
   const addBlog = (blog: Omit<Blog, 'id'>) => {
-    // This is for admin, but since we're fetching from API, perhaps not needed
-    // But to keep compatibility, maybe just update local state
     const newBlog: Blog = {
       ...blog,
       id: Date.now().toString()

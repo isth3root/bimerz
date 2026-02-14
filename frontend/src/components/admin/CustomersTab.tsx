@@ -76,7 +76,6 @@ export function CustomersTab({ customers, setCustomers, loading, token, onSearch
   const [sortBy, setSortBy] = useState<'name' | 'score' | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  // Persist searchQuery to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('customersSearchQuery', searchQuery);
   }, [searchQuery]);
@@ -649,7 +648,6 @@ export function CustomersTab({ customers, setCustomers, loading, token, onSearch
         </CardContent>
       </Card>
 
-      {/* Toggle Status Modal */}
       <AlertDialog open={!!toggleCustomer} onOpenChange={() => setToggleCustomer(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

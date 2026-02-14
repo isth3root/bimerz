@@ -60,7 +60,6 @@ export function TwoFactorSetup({ secret, userId, onComplete, onBack }: TwoFactor
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-gray-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Header */}
         <div className="text-center mb-8">
           <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
             <Smartphone className="w-8 h-8 text-blue-600" />
@@ -77,7 +76,6 @@ export function TwoFactorSetup({ secret, userId, onComplete, onBack }: TwoFactor
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Secret Display */}
             <div className="space-y-2">
               <Label>کد امنیتی (Secret Key)</Label>
               <div className="flex gap-2">
@@ -98,7 +96,6 @@ export function TwoFactorSetup({ secret, userId, onComplete, onBack }: TwoFactor
               </div>
             </div>
 
-            {/* QR Code Alternative */}
             <div className="space-y-2">
               <Label>یا کد QR را اسکن کنید</Label>
               <div className="bg-gray-50 p-4 rounded-lg text-center">
@@ -108,7 +105,6 @@ export function TwoFactorSetup({ secret, userId, onComplete, onBack }: TwoFactor
               </div>
             </div>
 
-            {/* Instructions */}
             <div className="bg-blue-50 p-4 rounded-lg">
               <h3 className="font-medium text-blue-900 mb-2">مراحل تنظیم:</h3>
               <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
@@ -119,7 +115,6 @@ export function TwoFactorSetup({ secret, userId, onComplete, onBack }: TwoFactor
               </ol>
             </div>
 
-            {/* 2FA Code Input */}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label>کد ۶ رقمی از اپلیکیشن</Label>
